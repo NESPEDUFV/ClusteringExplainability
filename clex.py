@@ -1,68 +1,122 @@
+import pandas as pd
+from pandas.api.types import is_object_dtype
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier
-
+from sklearn.preprocessing import OneHotEncoder
 
 class CLEX(DecisionTreeClassifier):
 
-    def __init__(self, *, criterion="gini", splitter="best", max_depth=None, min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0, max_features=None, random_state=None, max_leaf_nodes=None, min_impurity_decrease=0, class_weight=None, ccp_alpha=0):
+    def __init__(self, *, criterion="gini", 
+                        splitter="best", 
+                        max_depth=None, 
+                        min_samples_split=2, 
+                        min_samples_leaf=1, 
+                        min_weight_fraction_leaf=0,
+                        max_features=None, 
+                        random_state=None, 
+                        max_leaf_nodes=None, 
+                        min_impurity_decrease=0, 
+                        class_weight=None, 
+                        ccp_alpha=0):
+        
         super().__init__(
-                criterion, 
-                splitter, 
-                max_depth, 
-                min_samples_split, 
-                min_samples_leaf, 
-                min_weight_fraction_leaf, 
-                max_features, random_state, 
-                max_leaf_nodes, 
-                min_impurity_decrease, 
-                class_weight, 
-                ccp_alpha)
+                criterion=criterion, 
+                splitter=splitter, 
+                max_depth=max_depth, 
+                min_samples_split=min_samples_split, 
+                min_samples_leaf=min_samples_leaf, 
+                min_weight_fraction_leaf=min_weight_fraction_leaf, 
+                max_features=max_features,
+                random_state=random_state, 
+                max_leaf_nodes=max_leaf_nodes, 
+                min_impurity_decrease=min_impurity_decrease, 
+                class_weight=class_weight, 
+                ccp_alpha=ccp_alpha)
+
+        self.data = None
+        self.bin_columns = []
 
 
             
     def fit(self, x, y):
 
-        super().fit(x, y)
-        print("Modelo Acc: ", self.score(x, y))
-
-
-    def get_rules(self, x_test=None, bin_columns=None, label=None, mutually_exclusives=None, **kwargs):
+        self.data = x.copy()
         
-        """ Create clusters rules
+        # realiza o onehot
+        for i in self.data.columns:
 
-            Esse metódo extrai as regras associadas a cada cluster através de uma árvore de decisão.
+            if(is_object_dtype(self.data[i])):
+                self.bin_columns.extend(x[i].unique())
+                dummies = pd.get_dummies(self.data[i])
+                self.data = self.data.drop(i, axis=1).join(dummies)
+
+        super().fit(self.data, y)
+        
+        print("Modelo Acc: ", self.score(self.data, y))
+        self.data["cluster"] = y
+
+
+
+    def get_rules(self, bin_columns=None, label=None, mutually_exclusives=None, **kwargs):
+        """ Cria as regras para cada cluster
+
+            Esse metódo extrai as regras associadas a cada cluster geradas por uma árvore de decisão.
             O metódo tenta gerar regras claras e amigáveis, filtrando regras exclusivas. 
             
             A sample usage can be seen with the following:
             .. code-block :: python
-                import pyswarms.backend as P
-                from pyswarms.swarms.backend import Swarm, VelocityHandler
-                my_swarm = P.create_swarm(n_particles, dimensions)
-                my_vh = VelocityHandler(strategy="invert")
-                for i in range(iters):
-                    # Inside the for-loop
-                    my_swarm.velocity = compute_velocity(my_swarm, clamp, my_vh, bounds)
-            
+                from clex import CLEX
+
+                clex = CLEX() # add tree pruning params
+                clex.fit(x, y)
+                clex.get_rules(label=[0])
+
             Parameters
             ----------
-            swarm : pyswarms.backend.swarms.Swarm
-                a Swarm instance
-            clamp : tuple of floats, optional
-                a tuple of size 2 where the first entry is the minimum velocity
-                and the second entry is the maximum velocity. It
-                sets the limits for velocity clamping.
-            vh : pyswarms.backend.handlers.VelocityHandler
-                a VelocityHandler object with a specified handling strategy.
-                For further information see :mod:`pyswarms.backend.handlers`.
-            bounds : tuple of numpy.ndarray or list, optional
-                a tuple of size 2 where the first entry is the minimum bound while
-                the second entry is the maximum bound. Each array must be of shape
-                :code:`(dimensions,)`.
+            bin_columns : string
+                colunas binarias, representando sim ou nao
+            label : int or float
+                Label do cluster no qual se deseja extrair as regras
+            mutually_exclusives : list or tuple, optional
+                lista de atributos mutuamente exclusivos, utilizado para clareza
+                das regras.
             Returns
             -------
             numpy.ndarray
-                Updated velocity matrix
+                Um conjunto de regras para um ou mais clusters.
         """
+
+
+
+        # pegar regras para uma unica label ou para todas
+        if(label and len(label) == 1):
+            label = int(label[0])
+            rules = self._get_rules(data=self.data.query(f"cluster == {label}"),
+                            bin_columns=bin_columns, 
+                            label=label, 
+                            mutually_exclusives=mutually_exclusives, 
+                            **kwargs)
+            
+            return rules
+        else:
+            rules = []
+            labels = np.unique(self.data["cluster"])
+            for i in labels: 
+                data = self.data.query(f"cluster == {i}")
+                rules.append(self._get_rules(
+                                data=data,
+                                bin_columns=bin_columns, 
+                                label=int(i), 
+                                mutually_exclusives=mutually_exclusives, 
+                                **kwargs)
+                )
+
+            return rules
+
+            
+    def _get_rules(self, data=None, bin_columns=None, label=None, mutually_exclusives=None, **kwargs):
+        
+        x_test = data.drop("cluster", axis=1)
 
         node_indicator = self.decision_path(x_test)
         leaf_id = self.apply(x_test)
@@ -73,9 +127,23 @@ class CLEX(DecisionTreeClassifier):
         value = tree.value
 
         rule_values = []
+        rules = []
+        
+        mutually_exclusives_keys = {}
 
-        rules = np.array([])
-                
+        if(mutually_exclusives == None or len(kwargs.keys()) > 0):
+
+            for i in kwargs.keys():
+                if(mutually_exclusives == None):
+                    mutually_exclusives = [kwargs[i]]
+                else: 
+                    mutually_exclusives.append(kwargs[i])
+
+        if(mutually_exclusives != None):
+            for i in range(len(mutually_exclusives)):
+                mutually_exclusives_keys.update(dict.fromkeys(mutually_exclusives[i], i))
+
+        print(mutually_exclusives_keys)
 
         print(f"Amostras da classe {label}: ", x_test.shape[0])
         print("")
@@ -85,6 +153,8 @@ class CLEX(DecisionTreeClassifier):
                 node_indicator.indptr[i] : node_indicator.indptr[i + 1]
             ]
 
+            positives = []
+            #conditions = f"Regra cluster {label}\n\n"
             conditions = ""
             for node_id in node_index:
                 
@@ -99,16 +169,18 @@ class CLEX(DecisionTreeClassifier):
                 else:
                     threshold_sign = "maior que"
 
-                is_bin = x_test.columns[feature[node_id]] in bin_columns
+                is_bin = bin_columns and x_test.columns[feature[node_id]] in bin_columns
                 
-                # Trata regras de variavéis binarias diferente
+                # Trata regras de variavéis binarias diferentes
                 if(is_bin): 
+                    feature_name = x_test.columns[feature[node_id]]
                     if(x_test.iloc[i, feature[node_id]] == 1):    
                         conditions += "É {feature_name} &&\n".format(
-                                feature_name=x_test.columns[feature[node_id]])
+                                feature_name=feature_name)
+
                     else:
                         conditions += "Não é {feature_name} &&\n".format(
-                                feature_name=x_test.columns[feature[node_id]])
+                                feature_name=feature_name)
                 
                 else:
                     conditions += "{feature_name} {inequality} {threshold} &&\n".format(
@@ -116,13 +188,35 @@ class CLEX(DecisionTreeClassifier):
                             threshold=threshold[node_id],
                             feature_name=x_test.columns[feature[node_id]])
 
+            if(porc_value >= 0):        
+                rules.append(conditions) 
+
+        rules = np.unique(rules)        
+
+        # filtrar regras inuteis
+        for rule in range(len(rules)):
+            positives = []
+            rules_splited = rules[rule].split("\n")[:-1]
+            for condition in rules_splited:   
+                    if(condition[0] == "É"):
+                        feature_name = condition[2:-3]
+                        if(feature_name in mutually_exclusives_keys):
+                                index = mutually_exclusives_keys[feature_name]
+                                positives.extend(mutually_exclusives[index])
+
+            conditions_filtered  = self._filter_rules(rules_splited, positives)
+            rules[rule] = conditions_filtered
+
+        return rules
+
+    def _filter_rules(self, rules, to_remove):
+        new_rules = ""
+        for i in rules: 
+            if("Não" in i):
+                feature_name = i[6:-3]
+                if(feature_name in to_remove):
+                    continue
             
-            if(porc_value >= 0.1):
-
-                rules = np.append(rules,
-                                    conditions)
-                
-                
-            return np.unique(rules), np.unique(rule_values)
-
-    
+            new_rules += i + "\n"
+        
+        return new_rules
