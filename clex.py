@@ -143,8 +143,6 @@ class CLEX(DecisionTreeClassifier):
             for i in range(len(mutually_exclusives)):
                 mutually_exclusives_keys.update(dict.fromkeys(mutually_exclusives[i], i))
 
-        print(mutually_exclusives_keys)
-
         print(f"Amostras da classe {label}: ", x_test.shape[0])
         print("")
 
@@ -220,3 +218,11 @@ class CLEX(DecisionTreeClassifier):
             new_rules += i + "\n"
         
         return new_rules
+    
+    def top_features(self, k):
+        importances_sorted = np.argsort(self.feature_importances_)
+        features = self.data.columns
+        k = min(len(features), k)
+        for i in range(k):
+            index = importances_sorted[i]
+            print(features[index])
