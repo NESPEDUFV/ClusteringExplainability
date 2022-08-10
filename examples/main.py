@@ -20,10 +20,17 @@ clex = CLEX()
 
 # geração das regras para os clusters
 clex.fit(iris_df.drop("cluster", axis=1), iris_df["cluster"])
-for i in clex.get_rules(label=[1]):
-    print(i)
+labels = [1, 2] # labels que se deseja gerar regras
+rules = clex.get_rules(label=labels)
 
+for idx, i in enumerate(rules): 
+    print(f"Amostras Classe {labels[idx]}")
+    print("")
+    for j in i:
+        print(j)
+        print("")
 
+    print("")
 # visualizar a árvore criada com as regras completas
 fig = plt.figure(figsize=(40,40))
 ax = plot_tree(clex, 

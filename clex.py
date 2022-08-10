@@ -2,7 +2,6 @@ import pandas as pd
 from pandas.api.types import is_object_dtype
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.preprocessing import OneHotEncoder
 
 class CLEX(DecisionTreeClassifier):
 
@@ -41,7 +40,7 @@ class CLEX(DecisionTreeClassifier):
     def fit(self, x, y):
 
         self.data = x.copy()
-        
+            
         # realiza o onehot
         for i in self.data.columns:
 
@@ -51,62 +50,75 @@ class CLEX(DecisionTreeClassifier):
                 self.data = self.data.drop(i, axis=1).join(dummies)
 
         super().fit(self.data, y)
-        
-        print("Modelo Acc: ", self.score(self.data, y))
+            
+        self.model_score = self.score(self.data, y)
         self.data["cluster"] = y
 
 
 
-    def get_rules(self, bin_columns=None, label=None, mutually_exclusives=None, **kwargs):
-        """ Cria as regras para cada cluster
 
-            Esse metódo extrai as regras associadas a cada cluster geradas por uma árvore de decisão.
-            O metódo tenta gerar regras claras e amigáveis, filtrando regras exclusivas. 
-            
-            A sample usage can be seen with the following:
-            .. code-block :: python
-                from clex import CLEX
+    def get_rules(self, bin_columns=None, label=None, min_samples=0, mutually_exclusives=None, **kwargs):
+        """ 
+        Cria as regras para cada cluster
 
-                clex = CLEX() # add tree pruning params
-                clex.fit(x, y)
-                clex.get_rules(label=[0])
+        Esse metódo extrai as regras associadas a cada cluster geradas por uma árvore de decisão.
+        O metódo tenta gerar regras claras e amigáveis, filtrando regras exclusivas. 
+        
+        Um exemplo simples de utilização pode ser visto abaixo:            
+        
+        >>> from clex import CLEX
 
-            Parameters
-            ----------
-            bin_columns : string
-                colunas binarias, representando sim ou nao
-            label : int or float
-                Label do cluster no qual se deseja extrair as regras
-            mutually_exclusives : list or tuple, optional
-                lista de atributos mutuamente exclusivos, utilizado para clareza
-                das regras.
-            Returns
-            -------
-            numpy.ndarray
-                Um conjunto de regras para um ou mais clusters.
+        >>> x = [[1, 1, 1, 1], [2, 2, 2, 2]]
+        >>> y = [0, 0]
+        >>> clex = CLEX() # add tree pruning params
+        >>> clex.fit(x, y)
+        >>> clex.get_rules(label=[1])
+        ['1 menor ou igual a 1.5 \nQuantidade: 1 - 100.0%']
+
+        Parameters
+        ----------
+        bin_columns : string
+            colunas binarias, representando sim ou nao
+        label : int or float
+            Label do cluster no qual se deseja extrair as regras
+        mutually_exclusives : list or tuple, optional
+            lista de atributos mutuamente exclusivos, utilizado para clareza
+            das regras.
+
+        
+        Returns
+        -------
+        numpy.ndarray
+            Um conjunto de regras para um ou mais clusters.
         """
 
 
 
         # pegar regras para uma unica label ou para todas
-        if(label and len(label) == 1):
+        if(label is not None and len(label) == 1):
+
             label = int(label[0])
             rules = self._get_rules(data=self.data.query(f"cluster == {label}"),
                             bin_columns=bin_columns, 
                             label=label, 
+                            min_samples=min_samples,
                             mutually_exclusives=mutually_exclusives, 
                             **kwargs)
             
             return rules
+
         else:
+
             rules = []
-            labels = np.unique(self.data["cluster"])
+            labels = label
+
             for i in labels: 
                 data = self.data.query(f"cluster == {i}")
                 rules.append(self._get_rules(
                                 data=data,
                                 bin_columns=bin_columns, 
                                 label=int(i), 
+                                min_samples=min_samples,
                                 mutually_exclusives=mutually_exclusives, 
                                 **kwargs)
                 )
@@ -114,10 +126,15 @@ class CLEX(DecisionTreeClassifier):
             return rules
 
             
-    def _get_rules(self, data=None, bin_columns=None, label=None, mutually_exclusives=None, **kwargs):
+    def _get_rules(self, data=None, 
+                        bin_columns=None, 
+                        label=None, 
+                        min_samples=None, 
+                        mutually_exclusives=None, 
+                        **kwargs):
         
         x_test = data.drop("cluster", axis=1)
-
+        
         node_indicator = self.decision_path(x_test)
         leaf_id = self.apply(x_test)
         
@@ -143,8 +160,8 @@ class CLEX(DecisionTreeClassifier):
             for i in range(len(mutually_exclusives)):
                 mutually_exclusives_keys.update(dict.fromkeys(mutually_exclusives[i], i))
 
-        print(f"Amostras da classe {label}: ", x_test.shape[0])
-        print("")
+        #print(f"Amostras da classe {label}: ", x_test.shape[0])
+        #print("")
 
         for i in range(x_test.shape[0]): 
             node_index = node_indicator.indices[
@@ -157,8 +174,8 @@ class CLEX(DecisionTreeClassifier):
             for node_id in node_index:
                 
                 if leaf_id[i] == node_id:
-                    porc_value = value[node_id][0][label]/np.sum(value[node_id])
-                    rule_values.append(value[node_id][0][label])
+                    porc_value = value[node_id][0][label - 1]/np.sum(value[node_id])
+                    rule_values.append(value[node_id][0][label - 1])
                     continue
 
                 # Verifica se a variavel da amostra em questão é maio ou menor que o valor
@@ -183,13 +200,13 @@ class CLEX(DecisionTreeClassifier):
                 else:
                     conditions += "{feature_name} {inequality} {threshold} &&\n".format(
                             inequality=threshold_sign,
-                            threshold=threshold[node_id],
+                            threshold=round(threshold[node_id], 2),
                             feature_name=x_test.columns[feature[node_id]])
 
             if(porc_value >= 0):        
                 rules.append(conditions) 
 
-        rules = np.unique(rules)        
+        rules, counts = np.unique(rules, return_counts=True)        
 
         # filtrar regras inuteis
         for rule in range(len(rules)):
@@ -204,19 +221,33 @@ class CLEX(DecisionTreeClassifier):
 
             conditions_filtered  = self._filter_rules(rules_splited, positives)
             rules[rule] = conditions_filtered
+        
+        total = np.sum(counts)
+
+        # filtrar por uma porcentagem minima de amostras na regra
+        rules = [rules[i] for i in range(len(rules)) if counts[i]/total >= min_samples]
+        
+        for i in range(len(rules)):
+            percent = counts[i]/total * 100
+            percent = np.around(percent, 2)
+            rules[i] += "Quantidade: " + str(counts[i]) + " - " + str(percent) + "%"
 
         return rules
 
     def _filter_rules(self, rules, to_remove):
         new_rules = ""
-        for i in rules: 
+        for idx, i in enumerate(rules): 
             if("Não" in i):
                 feature_name = i[6:-3]
                 if(feature_name in to_remove):
                     continue
             
-            new_rules += i + "\n"
-        
+            
+            if(idx == len(rules) - 1):
+                new_rules += i.replace("&&", "") + "\n"
+            else: 
+                new_rules += i + "\n"
+
         return new_rules
     
     def top_features(self, k):
