@@ -7,7 +7,7 @@ Utiliza CART - Classification and regression trees - e tenta gerar regras amigá
 
 Para utilizar a geração de regras, inicialmente é necessário criar a árvore de decisão para os dados.  
 
-O método `fit` realiza a criação da árvore, recebendo como parâmetros um `dataframe` com os dados utilizados para o agrupamento e uma lista com o cluster de cada amostra nos dados. É possível também passar parâmetros adicionais para criar árvores com diferentes características.
+O método `fit` realiza a criação da árvore, recebendo como parâmetros um `dataframe` com os dados utilizados para o agrupamento e uma série com o cluster de cada instância/linha, ou seja, o número indicando a qual grupo cada instância/linha pertence. É possível também passar parâmetros adicionais para criar árvores com diferentes características.
 
 ```python
 
