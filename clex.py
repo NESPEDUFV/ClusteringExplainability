@@ -61,13 +61,12 @@ class CLEX(DecisionTreeClassifier):
         """ 
         Cria as regras para cada cluster
 
-        Esse metódo extrai as regras associadas a cada cluster geradas por uma árvore de decisão.
+        Esse metódo extrai as regras associadas a cada cluster geradas por uma árvore de decisão. \n
         O metódo tenta gerar regras claras e amigáveis, filtrando regras exclusivas. 
         
         Um exemplo simples de utilização pode ser visto abaixo:            
         
         >>> from clex import CLEX
-
         >>> x = [[1, 1, 1, 1], [2, 2, 2, 2]]
         >>> y = [0, 0]
         >>> clex = CLEX() # add tree pruning params
@@ -75,12 +74,15 @@ class CLEX(DecisionTreeClassifier):
         >>> clex.get_rules(label=[1])
         ['1 menor ou igual a 1.5 \nQuantidade: 1 - 100.0%']
 
+        
         Parameters
         ----------
         bin_columns : string
             colunas binarias, representando sim ou nao
         label : int or float
             Label do cluster no qual se deseja extrair as regras
+        min_samples : float
+            Porcentagem minima de amostras em uma regra    
         mutually_exclusives : list or tuple, optional
             lista de atributos mutuamente exclusivos, utilizado para clareza
             das regras.
@@ -157,8 +159,11 @@ class CLEX(DecisionTreeClassifier):
                     mutually_exclusives.append(kwargs[i])
 
         if(mutually_exclusives != None):
-            for i in range(len(mutually_exclusives)):
-                mutually_exclusives_keys.update(dict.fromkeys(mutually_exclusives[i], i))
+            if isinstance(mutually_exclusives[0], list) or isinstance(mutually_exclusives[0], np.ndarray):
+                for i in range(len(mutually_exclusives)):
+                    mutually_exclusives_keys.update(dict.fromkeys(mutually_exclusives[i], i))
+            else: 
+                mutually_exclusives_keys.update(dict.fromkeys(mutually_exclusives, 0))
 
         #print(f"Amostras da classe {label}: ", x_test.shape[0])
         #print("")
@@ -225,8 +230,10 @@ class CLEX(DecisionTreeClassifier):
         total = np.sum(counts)
 
         # filtrar por uma porcentagem minima de amostras na regra
-        rules = [rules[i] for i in range(len(rules)) if counts[i]/total >= min_samples]
-        
+        rules_filter = np.where(counts/total >= min_samples)
+        rules = rules[rules_filter]
+        counts = counts[rules_filter]
+
         for i in range(len(rules)):
             percent = counts[i]/total * 100
             percent = np.around(percent, 2)

@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 
-# adicionar caminho do modulo
+# adicionar caminho do script
 path = "/home/guilherme/Documentos"
 sys.path.insert(0, path + "/cluster_explainability")
 from clex import CLEX
@@ -18,10 +18,16 @@ iris_df = pd.DataFrame(data= np.c_[iris['data'], iris['target']],
 
 clex = CLEX()
 
-# geração das regras para os clusters
+# geração da arvore 
 clex.fit(iris_df.drop("cluster", axis=1), iris_df["cluster"])
+
+# geração das regras
 labels = [1, 2] # labels que se deseja gerar regras
-rules = clex.get_rules(label=labels)
+rules = clex.get_rules(bin_columns=None,
+                        label=labels,
+                        min_samples=0.1,
+                        mutually_exclusives=None 
+                        )
 
 for idx, i in enumerate(rules): 
     print(f"Amostras Classe {labels[idx]}")
@@ -31,6 +37,7 @@ for idx, i in enumerate(rules):
         print("")
 
     print("")
+
 # visualizar a árvore criada com as regras completas
 fig = plt.figure(figsize=(40,40))
 ax = plot_tree(clex, 

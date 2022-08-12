@@ -5,7 +5,9 @@ Utiliza CART - Classification and regression trees - e tenta gerar regras amigá
 
 ## Exemplo de utilização básico 
 
-Abaixo é possível visualizar um exemplo simples de como utilizar: 
+Para utilizar a geração de regras, inicialmente é necessário criar a árvore de decisão para os dados.  
+
+O método `fit` realiza a criação da árvore, recebendo como parâmetros um `dataframe` com os dados utilizados para o agrupamento e uma lista com o cluster de cada amostra nos dados. É possível também passar parâmetros adicionais para criar árvores com diferentes características.
 
 ```python
 
@@ -22,11 +24,23 @@ iris = load_iris()
 iris_df = pd.DataFrame(data= np.c_[iris['data'], iris['target']],
                      columns= iris['feature_names'] + ['cluster'])
 
+
 clex = CLEX()
 
-# geração das regras para os clusters
+# criação da árvore para geração de regras
 clex.fit(iris_df.drop("target", axis=1), iris["cluster"])
-clex.get_rules(label=[0])
+```
+
+Após criar a árvore, é possível gerar as regras. O método `get_rules` é o responsável pela geração. Ele tem diversos parâmetros para geração das regras. O parâmetro `bin_columns` é utilizado para verificação de colunas binárias ou dummy, fazendo com que regras mais legíveis sejam criadas. O parâmetro `label` é uma lista com os rótulos de quais grupos se deseja gerar as regras. Com o objetivo de filtrar regras desnecessárias, com poucas amostras, o parâmetro `min_samples`pode ser utilizado. Ele recebe uma porcentagem mínima de amostras da classe para uma regra ser considerada. Por fim, existe o parâmetro `mutually_exclusives`. Ele recebe uma lista de atributos mutuamente exclusivos e é utilizado para gerar regras mais legíveis. Pode ser inserido também um conjunto de atributos mutuamente exclusivos, com uma "lista de listas" de atributos desse tipo. Ainda é possível passar as listas de atributos mutuamente exclusivos como parâmetros personalizados separados, caso eles fiquem ao final da chamada do método. Para isso, basta adicionar parâmetros com um nome e a lista de atributos que sejam mutuamente exclusivos.    
+
+```python
+
+# geração de regras
+clex.get_rules(bin_columns=None,
+                label=[0],
+                min_samples=0.1,
+                mutually_exclusives=None # poderia ser: [["atributo 1", "atributo 2"], ...]. atributos que nao ocorrem ao mesmo tempo
+                )
 
 
 # visualizar a árvore criada com as regras completas
