@@ -31,18 +31,62 @@ clex = CLEX()
 clex.fit(iris_df.drop("target", axis=1), iris["cluster"])
 ```
 
-Após criar a árvore, é possível gerar as regras. O método `get_rules` é o responsável pela geração. Ele tem diversos parâmetros para geração das regras. O parâmetro `bin_columns` é utilizado para verificação de colunas binárias ou dummy, fazendo com que regras mais legíveis sejam criadas. O parâmetro `label` é uma lista com os rótulos de quais grupos se deseja gerar as regras. Com o objetivo de filtrar regras desnecessárias, com poucas amostras, o parâmetro `min_samples`pode ser utilizado. Ele recebe uma porcentagem mínima de amostras da classe para uma regra ser considerada. Por fim, existe o parâmetro `mutually_exclusives`. Ele recebe uma lista de atributos mutuamente exclusivos e é utilizado para gerar regras mais legíveis. Pode ser inserido também um conjunto de atributos mutuamente exclusivos, com uma "lista de listas" de atributos desse tipo. Ainda é possível passar as listas de atributos mutuamente exclusivos como parâmetros personalizados separados, caso eles fiquem ao final da chamada do método. Para isso, basta adicionar parâmetros com um nome e a lista de atributos que sejam mutuamente exclusivos.    
+Após criar a árvore, é possível gerar as regras. O método `get_rules` é o responsável pela geração. Ele tem diversos parâmetros para geração das regras e retorna uma lista com as regras para cada grupo desejado. O parâmetro `bin_columns` é utilizado para verificação de colunas binárias ou dummy, fazendo com que regras mais legíveis sejam criadas. O parâmetro `label` é uma lista com os rótulos de quais grupos se deseja gerar as regras. Com o objetivo de filtrar regras desnecessárias, com poucas amostras, o parâmetro `min_samples`pode ser utilizado. Ele recebe uma porcentagem mínima de amostras da classe para uma regra ser considerada. Por fim, existe o parâmetro `mutually_exclusives`. Ele recebe uma lista de atributos mutuamente exclusivos e é utilizado para gerar regras mais legíveis. Pode ser inserido também um conjunto de atributos mutuamente exclusivos, com uma "lista de listas" de atributos desse tipo. Ainda é possível passar as listas de atributos mutuamente exclusivos como parâmetros personalizados separados, caso eles fiquem ao final da chamada do método. Para isso, basta adicionar parâmetros com um nome e a lista de atributos que sejam mutuamente exclusivos.    
 
 ```python
 
-# geração de regras
-clex.get_rules(bin_columns=None,
-                label=[0],
-                min_samples=0.1,
-                mutually_exclusives=None # poderia ser: [["atributo 1", "atributo 2"], ...]. atributos que nao ocorrem ao mesmo tempo
-                )
+# geração das regras
+labels = [1, 2] # grupos para os quais se deseja gerar regras
+rules_all_groups = clex.get_rules(bin_columns=None,
+                        label=labels,
+                        min_samples=0.1,
+                        mutually_exclusives=None 
+                        )
+
+```
+O formato de retorno das regras é o seguinte: 
+
+```python
+>>> print(rules_all_groups)
+```
+
+    [
+        array(['petal length (cm) maior que 2.45 &&\npetal width (cm) menor ou igual a 1.75 &&\npetal length (cm) menor ou igual a 4.95 &&\npetal width (cm) menor ou igual a 1.65 \nQuantidade: 47 - 94.0%'], dtype='<U192'),
+        array(['petal length (cm) maior que 2.45 &&\npetal width (cm) maior que 1.75 &&\npetal length (cm) maior que 4.85 \nQuantidade: 43 - 86.0%'], dtype='<U185')
+    ]
 
 
+Finalizando, é possível imprimir as regras:
+
+```python
+
+# retorna uma lista de regras para cada grupo, é possível iterar sobre elas, como abaixo
+for idx, rules in enumerate(rules_all_groups): 
+    
+    print(f"Regras do Grupo {labels[idx]}")
+    for rule in rules:
+        print(rule)
+        print("")
+
+```
+
+    Regras do Grupo 1
+    petal length (cm) maior que 2.45 &&
+    petal width (cm) menor ou igual a 1.75 &&
+    petal length (cm) menor ou igual a 4.95 &&
+    petal width (cm) menor ou igual a 1.65 
+    Quantidade: 47 - 94.0%
+
+    Regras do Grupo 2
+    petal length (cm) maior que 2.45 &&
+    petal width (cm) maior que 1.75 &&
+    petal length (cm) maior que 4.85 
+    Quantidade: 43 - 86.0%
+
+
+E também é possível visualizar a árvore criada para a geração das regras de maneira completa:
+
+```python
 # visualizar a árvore criada com as regras completas
 fig = plt.figure(figsize=(40,40))
 ax = plot_tree(clex, 

@@ -1,4 +1,3 @@
-
 import matplotlib.pyplot as plt
 import numpy as np
 import sys
@@ -23,20 +22,20 @@ clex.fit(iris_df.drop("cluster", axis=1), iris_df["cluster"])
 
 # geração das regras
 labels = [1, 2] # labels que se deseja gerar regras
-rules = clex.get_rules(bin_columns=None,
+rules_all_groups = clex.get_rules(bin_columns=None,
                         label=labels,
                         min_samples=0.1,
                         mutually_exclusives=None 
                         )
 
-for idx, i in enumerate(rules): 
-    print(f"Amostras Classe {labels[idx]}")
-    print("")
-    for j in i:
-        print(j)
+# retorna uma lista de regras para cada grupo, é possível iterar sobre elas
+for idx, rules in enumerate(rules_all_groups): 
+    
+    print(f"Regras do Grupo {labels[idx]}")
+    for rule in rules:
+        print(rule)
         print("")
 
-    print("")
 
 # visualizar a árvore criada com as regras completas
 fig = plt.figure(figsize=(40,40))
