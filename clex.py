@@ -178,7 +178,7 @@ class CLEX(DecisionTreeClassifier):
 
             positives = []
             #conditions = f"Regra cluster {label}\n\n"
-            conditions = []
+            conditions = ""
             for node_id in node_index:
                 
                 if leaf_id[i] == node_id:
@@ -198,54 +198,55 @@ class CLEX(DecisionTreeClassifier):
                 if(is_bin): 
                     feature_name = x_test.columns[feature[node_id]]
                     if(x_test.iloc[i, feature[node_id]] == 1):    
-                        conditions.append("IS {feature_name}".format(
+                        conditions += ("IS {feature_name}&&\n".format(
                                 feature_name=feature_name)
                             )
 
                     else:
-                        conditions.append("NOT IS {feature_name}".format(
+                        conditions += ("NOT IS {feature_name}&&\n".format(
                                 feature_name=feature_name)
                             )
                 
                 else:
-                    conditions.append("{feature_name} {inequality} {threshold}".format(
+                    conditions += ("{feature_name} {inequality} {threshold}&&\n".format(
                             inequality=threshold_sign,
                             threshold=round(threshold[node_id], 2),
                             feature_name=x_test.columns[feature[node_id]])
                     )
 
-            if(porc_value >= 0):        
-                rules.append(conditions) 
+            if(porc_value >= 0):      
+                rules.append(conditions.strip("&&\n")) 
 
-        
-        rules, counts = np.unique(rules, return_counts=True)           
-        #splitted_rules = [i.replace("\n", "").split("&&") for i in rules]
+        rules, counts = np.unique(rules, return_counts=True)
+        rules = [i.replace("\n", "").split("&&") for i in rules]
         #self._preprocess_rules(rules)    
 
         # filtrar regras inuteis
+        new_rules = []
         for i, rule in enumerate(rules):
             positives = []
-            for condition in rule:   
-                    if(condition[0] == "IS"):
-                        feature_name = condition[2:-3]
-                        if(feature_name in mutually_exclusives_keys):
-                                index = mutually_exclusives_keys[feature_name]
-                                positives.extend(mutually_exclusives[index])
+            for condition in rule:
+                if(condition[0] == "IS"):
+                    feature_name = condition[3:]
+                    if(feature_name in mutually_exclusives_keys):
+                            index = mutually_exclusives_keys[feature_name]
+                            positives.extend(mutually_exclusives[index])
 
             conditions_filtered  = self._filter_rules(rule, positives)
-            rules[i] = conditions_filtered
+            new_rules.append(conditions_filtered)
         
+        new_rules = np.array(new_rules, dtype="object")
+        rules = new_rules
         total = np.sum(counts)
 
         # filtrar por uma porcentagem minima de amostras na regra
         rules_filter = np.where(counts/total >= min_samples)
         rules = rules[rules_filter]
         counts = counts[rules_filter]
-        print(rules)
+
+        #adiciona regras do tipo between
         rules = [self._preprocess_rules(rules[i]) for i in range(len(rules))]
-
-
-
+        
         for i in range(len(rules)):
             percent = counts[i]/total * 100
             percent = np.around(percent, 2)
@@ -259,7 +260,7 @@ class CLEX(DecisionTreeClassifier):
         new_rules = []
         for idx, i in enumerate(rules): 
             if("NOT" in i):
-                feature_name = i[6:-3]
+                feature_name = i[7:]
                 if(feature_name in to_remove):
                     continue
             else: 
