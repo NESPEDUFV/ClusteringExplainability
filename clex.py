@@ -226,7 +226,8 @@ class CLEX(DecisionTreeClassifier):
         for i, rule in enumerate(rules):
             positives = []
             for condition in rule:
-                if(condition[0] == "IS"):
+                
+                if(condition[:3] == "IS "):
                     feature_name = condition[3:]
                     if(feature_name in mutually_exclusives_keys):
                             index = mutually_exclusives_keys[feature_name]
@@ -259,10 +260,12 @@ class CLEX(DecisionTreeClassifier):
     def _filter_rules(self, rules, to_remove):
         new_rules = []
         for idx, i in enumerate(rules): 
-            if("NOT" in i):
+            if("NOT " == i[:4]):
                 feature_name = i[7:]
                 if(feature_name in to_remove):
                     continue
+                else:
+                    new_rules.append(i)
             else: 
                 new_rules.append(i)
 
@@ -286,7 +289,7 @@ class CLEX(DecisionTreeClassifier):
                 dict_features[feature][0] = max(dict_features[feature][0],float(value))
 
         for i in rules:
-            if("IS" in i):
+            if("IS " in i or "NOT IS " in i):
                 new_rules.append(i)
         
         for i in dict_features.keys():
