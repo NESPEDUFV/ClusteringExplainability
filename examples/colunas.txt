@@ -1,0 +1,29 @@
+media_produtos_ativos
+tempo_cliente
+renda_media
+idade_cliente
+score_renda
+score_mobilidade
+ADMINISTRADOR DE EMPRESAS
+ADVOGADO
+APOSENTADO (POR TEMPO DE SERVICO)
+AUXILIAR ADMINISTRATIVO
+CORRETOR DE SEGUROS
+DO LAR
+EMPRESARIO
+ESTAGIARIO / ESTUDANTE
+LAVRADOR, TRABALHADOR RURAL ( AGRICULTURA E PECUARIA)
+MEDICO
+OUTRA
+PEDREIRO
+VENDEDOR
+API - Acidentes Pessoais Individual
+Acidentes Pessoais Individual PLUS - Anual
+Porto Seguro Acidentes Pessoais
+Trianual - Vida e Acidentes Pessoais Individual
+Vida Mais  Simples - Anual
+Vida Mais  Simples - WEB
+Vida Mais  Simples Cooperativas
+Vida Mais Mulher - Anual
+Vida e Acidentes Pessoais Individual - Anual
+Vida e Acidentes Pessoais Individual com Perfil II

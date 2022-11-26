@@ -2,7 +2,8 @@ import pandas as pd
 import numpy as np
 from scipy.stats import entropy
 from sklearn import svm 
-from sklearn.metrics import precision_score
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score, recall_score
 
 class CLDES:
 
@@ -12,20 +13,25 @@ class CLDES:
         self.model = model
 
 
-    def explain_it(self, X, Y_true, X_test, y_test, n_repeats, groups, cluster):
-        clf = svm.SVC(decision_function_shape='ovo')
+    def explain_it(self, X, Y_true, X_test, y_test, n_repeats, groups):
+        y_test = np.array(y_test)
+        clusters = np.unique(Y_true)
+        #clf = svm.SVC(decision_function_shape='ovo')
+        clf = DecisionTreeClassifier()
         clf.fit(X, Y_true) 
         
 
-        Pct_Chg = np.zeros((n_repeats,len(np.unique(groups)))) # preallocate output matrix number of repeats x number of features
-       
+        Pct_Chg = np.zeros((n_repeats, len(np.unique(groups)), len(clusters))) # preallocate output matrix number of repeats x number of features
+        Pct_Chg_acc = np.zeros((n_repeats, len(np.unique(groups)))) # preallocate output matrix number of repeats x number of features
+        pct_chg_recall = np.zeros((n_repeats, len(np.unique(groups)), len(clusters))) # preallocate output matrix number of repeats x number of features
+        
         y_predicted = clf.predict(X_test)
-        e_original = precision_score(y_test, y_predicted, average=None)
-
+        e_original = accuracy_score(y_test, y_predicted)
+        r_original = recall_score(y_test, y_predicted, average=None)
+        print("Acc: ", e_original)
         print("------ Inicio da permutação --------")
         for j in np.unique(groups): 
             for k in range(n_repeats): 
-                np.random.seed(seed=k)
                 X_2 = np.copy(X_test)
                 X_2[:] = X_test[:] 
                 
@@ -33,15 +39,29 @@ class CLDES:
                 X_2[:, np.squeeze(list(groups == j*np.ones_like(groups)))] = Sub_Data # adiciona a permutaão na matriz
                 
                 Y_2 = clf.predict(X_2)
-                e_new = precision_score(y_test, Y_2, average=None)
+                e_new = accuracy_score(y_test, Y_2)
+                r_new = recall_score(y_test, Y_2, average=None)
+                
+                #e_new = precision_score(y_test, Y_2, average=None)
 
-                e_new = e_new[cluster]
-                e_original_cluster = e_original[cluster]
+                #e_new = e_new[cluster]
+                #e_original_cluster = e_original[cluster]
 
                 # calcular a porcentagem de mudança na precisão
-                Pct_Chg[k,j] = e_original_cluster - e_new 
-        
-        return Pct_Chg
+                #print("Pct_change ", e_original)
+                #print("Acc nova: ", e_new)
+                
+                Pct_Chg_acc[k,j] = (e_original - e_new) 
+                for g in clusters.astype(int):   
+                    pct_chg_recall[k, j, int(g)] = r_original[g] - r_new[g]
+                    cluster = y_test == g
+                    Pct_Chg[k, j, int(g)] = np.sum(Y_2[cluster] != y_test[cluster])/len(y_test[cluster])
+
+        print("Recall: ")
+        print(pct_chg_recall)
+        print("")
+        print("")
+        return Pct_Chg, Pct_Chg_acc
 
     def group_permutation_change(self, X, Y, n_repeats, groups, random_state, cluster, check_var):
         
@@ -94,34 +114,54 @@ class CLDES:
         value, counts = np.unique(labels, return_counts=True)
         return entropy(counts)
 
-    def generate_cluster_description(self, data: pd.DataFrame, cluster: int):
+    def generate_cluster_description(self, data: pd.DataFrame, cluster: int, importances):
         data = data.dropna(axis=1)
 
         numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
         cols = data.select_dtypes(numerics).columns
         continuos_vars = [x for x in cols if len(data[x].unique()) > 10 and data[x].dtype and x != "cluster"]
         
-        for col in continuos_vars: 
-            bins = np.histogram_bin_edges(data[col], bins="fd")
-            data[col] = pd.cut(data[col], bins)
+        #for col in continuos_vars: 
+        #    bins = np.histogram_bin_edges(data[col], bins="fd")
+        #    data[col] = pd.cut(data[col], bins)
+
+        feature_importances = []
+        for i in range(importances.shape[0]):
+            for j in range(importances.shape[1]):
+                feature_importances.append(importances[i][j][2])
+
+        #print(feature_importances)
+        index_sort = np.argsort(feature_importances)
+        index_sort = index_sort[::-1]
+        sorte_fe_im = sorted(feature_importances, reverse=True)
 
         data = data[data["cluster"] == cluster]
-        
-        for col in data.columns:
-            value_counts = data[col].value_counts()
-            percs = value_counts/data.shape[0]
-            percs_idx = percs[percs >= self._min_per].index
-            percs = percs[percs_idx].values
-            values = value_counts[percs_idx].values    
-            
-            print("Entropy: ", entropy(value_counts.values, ))
-            print("")
-            print(col)
-            print(pd.DataFrame({
-                "porc.": percs,
-                "valores": percs_idx
-            }))
-            print("")
 
+        columns_sorted = data.columns[index_sort]
+        for i, col in enumerate(columns_sorted):
+            if(sorte_fe_im[i] == 0):
+                continue
+            if(col not in continuos_vars):
+                value_counts = data[col].value_counts()
+                percs = value_counts/data.shape[0]
+                percs_idx = percs[percs >= self._min_per].index
+                percs = percs[percs_idx].values
+                values = value_counts[percs_idx].values    
+                #print("")
+                #print(col)
+                #print(pd.DataFrame({
+                #    "porc.": percs,
+                #    "valores": percs_idx
+                #}))
+                #print("")
+                print(f"{col} entropy: ", entropy(value_counts.values, ))
+                print(f"{percs_idx[0]} - {percs[0]}")
+                print("")
+            else:
+                #print(col, data[col])
+                values = (np.percentile(data[col], 15), np.percentile(data[col], 85))
+                print(f"Values - {col}: {values} - 75%")
+                print("")
+                
 
-        print(data.head())
+        #print(data.head())
