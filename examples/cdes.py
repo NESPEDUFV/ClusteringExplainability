@@ -2,7 +2,7 @@ import os
 import sys
 
 # adicionar caminho do script
-path = "/home/guilherme/Documentos"
+path = "/home/cinnecta/Documentos/cluster_explainability-20230404T024033Z-001"
 sys.path.insert(0, path + "/cluster_explainability")
 from cldes import CLDES
 from clex import CLEX
@@ -15,7 +15,8 @@ from sklearn.cluster import KMeans
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.datasets import make_blobs
-
+import seaborn as sns
+sns.set()
 
 
 def dados_simulados():
@@ -26,6 +27,8 @@ def dados_simulados():
 
 
     X = StandardScaler().fit_transform(X)
+    kmeans = KMeans(3).fit(X)
+    predicted = kmeans.predict(X)
     data = pd.DataFrame(X, columns = ['Column_A','Column_B'])
     data["cluster"] = labels_true
 
@@ -42,18 +45,23 @@ def dados_simulados():
     pct_chg, pct_chg_acc = cldes.explain_it(X_train, y_train, X_test, y_test, 1, groups)
     print(pct_chg)
     print(pct_chg_acc)
-    cldes.generate_cluster_description(data, 0, pct_chg)
+
+    for i in range(3):
+        print(f"Grupo: {i}")
+        cldes.generate_cluster_description(data, i, pct_chg)
 
 
     fig, ax = plt.subplots()
-    scatter = ax.scatter(
+    ax = sns.scatterplot(
         X[:, 0],
         X[:, 1],
-        c=labels_true
+        hue=predicted,
+        ax=ax
     )
-    legend1 = ax.legend(*scatter.legend_elements(),
-                    loc="lower left", title="Classes")
+    legend1 = ax.legend(loc="upper left", title="Grupos")
     ax.add_artist(legend1)
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
     plt.show()
     
 
@@ -64,14 +72,26 @@ def dados_porto_seguro():
         lines = f.readlines()
         lines = [x.strip() for x in lines]
         columns = [x.replace("\n", "") for x in lines]
+    
+    
+    map_products = {
+        product: f"Produto {value}" for value, product in enumerate(df["nom_produto_ajustado"].unique())
+    }
+
+    map_profissions = {
+        profission: f"Profissao {value}" for value, profission in enumerate(df["profissao_ajustada"].unique())
+    }
+
+    map_products_and_profissions = {**map_products, **map_profissions}
 
     df_aux = df[columns].drop(["score_renda", "score_mobilidade"], axis=1)
     df_aux["renda_media"].fillna(df["renda_media"].mean(), inplace=True)
     df_aux["cluster"] = df["cluster"]
-    
+    df_aux = df_aux.rename(map_products_and_profissions, axis=1)
+
     data = df_aux[df_aux["cluster"] != -1].copy()    
 
-    scaler = MinMaxScaler()
+    scaler = StandardScaler()
     df_aux["renda_media"] = scaler.fit_transform(df_aux["renda_media"].values.reshape(-1, 1))
     df_aux["tempo_cliente"] = scaler.fit_transform(df_aux["tempo_cliente"].values.reshape(-1, 1))
     df_aux["idade_cliente"] = scaler.fit_transform(df_aux["idade_cliente"].values.reshape(-1, 1))
@@ -83,42 +103,55 @@ def dados_porto_seguro():
 
     X_train, X_test, y_train, y_test = train_test_split(x, 
                                                         y, 
-                                                        test_size=0.20, 
-                                                        random_state=42)
+                                                        test_size=0.20
+                                                        )
 
     groups = [i for i in range(len(X_train.columns))]
     
     cldes = CLDES(0.01, 10, kmeans)
-    pct_chg = cldes.explain_it(X_train, y_train, X_test, y_test, 1, groups)
+    pct_chg, pct_chg_acc = cldes.explain_it(X_train, y_train, X_test, y_test, 10, groups)
     print("Feature importances: ")
     print(pct_chg)
     print("")
 
-    cldes.generate_cluster_description(data, 5, pct_chg)
+    for i in range(int(df["cluster"].nunique()) - 1):
+        print(f"Grupo: {i}")
+        cldes.generate_cluster_description(data, i, pct_chg)
 
     clex = CLEX()
 
     # geração da arvore 
-    clex.fit(data.drop("cluster", axis=1), data["cluster"])
+    df.replace(map_products_and_profissions, inplace=True)
+    clex.fit(x, y)
+    bin_columns = df["profissao_ajustada"].unique().tolist() + df["nom_produto_ajustado"].unique().tolist()
 
     # geração das regras
-    #labels = [3] # labels que se deseja gerar regras
-    #rules_all_groups = clex.get_rules(bin_columns=None,
-    #                        label=labels,
-    #                        min_samples=0,
-    #                        mutually_exclusives=None 
-    #                        )
+    labels = [0, 1, 2, 3, 4] # labels que se deseja gerar regras
+    rules_all_groups = clex.get_rules(bin_columns=bin_columns,
+                            label=labels,
+                            min_samples=0,
+                            mutually_exclusives=[df["profissao_ajustada"].unique(), df["nom_produto_ajustado"].unique()] ,
+                            )
+    #for idx, rules in enumerate(rules_all_groups):     
+    #    print(f"Regras do Grupo {labels[idx]}")
+    #    for rule in rules:
+    #        print(rule)
+    #        print("")
+
 
     fig = plt.figure(figsize=(40,40))
     ax = plot_tree(clex, 
-                    filled=True, 
+                    filled=False, 
                     feature_names=data.columns,
-                    fontsize=8)
+                    fontsize=6,
+                    label=None,
+                    impurity=None)
 
     plt.show()
 
 
 if __name__ == "__main__":
+
     iris = load_iris()
     scaler = MinMaxScaler()
 
@@ -146,18 +179,19 @@ if __name__ == "__main__":
     groups = [i for i in range(len(X_train.columns))]
     cldes = CLDES(0, 10, kmeans)
 
-    #dados_porto_seguro()
-    #sys.exit(0)
-    pct_chg, pct_chg_acc = cldes.explain_it(X_train, y_train, X_test, y_test, 1, groups)
+    dados_porto_seguro()
+    sys.exit(0)
+    pct_chg, pct_chg_acc = cldes.explain_it(X_train, y_train, X_test, y_test, 10, groups)
     print(iris_df.columns)
     print(pct_chg)
-
 
     # ---------------------- g2pc
     #pct_change = cldes.group_permutation_change(X, predicted, 3, groups, 0, 0, 0)
 
     #print(pct_change)
     for i in range(3):
+        print(f"Grupo: {i}")
+        print("")
         cldes.generate_cluster_description(iris_df, i, pct_chg)
 
     #df = pd.read_csv("/home/guilherme/Documentos/porto_seguro/data/personas_new.csv", index_col=0)

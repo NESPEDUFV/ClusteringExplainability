@@ -212,6 +212,7 @@ class CLEX(DecisionTreeClassifier):
                 rules.append(conditions) 
 
         rules, counts = np.unique(rules, return_counts=True)        
+        rules = rules.astype("U500")
 
         # filtrar regras inuteis
         for rule in range(len(rules)):
@@ -237,7 +238,7 @@ class CLEX(DecisionTreeClassifier):
         for i in range(len(rules)):
             percent = counts[i]/total * 100
             percent = np.around(percent, 2)
-            rules[i] += "Quantidade: " + str(counts[i]) + " - " + str(percent) + "%"
+            rules[i] = rules[i] + "Quantidade: " + str(counts[i]) + " - " + str(percent) + "%"
 
         return rules
 
