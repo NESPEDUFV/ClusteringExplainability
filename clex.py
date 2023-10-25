@@ -217,9 +217,8 @@ class CLEX(DecisionTreeClassifier):
             if(porc_value >= 0):      
                 rules.append(conditions.strip("&&\n")) 
 
-        rules, counts = np.unique(rules, return_counts=True)
-        rules = [i.replace("\n", "").split("&&") for i in rules]
-        #self._preprocess_rules(rules)    
+        rules, counts = np.unique(rules, return_counts=True)        
+        rules = rules.astype("U500")
 
         # filtrar regras inuteis
         new_rules = []
@@ -251,9 +250,7 @@ class CLEX(DecisionTreeClassifier):
         for i in range(len(rules)):
             percent = counts[i]/total * 100
             percent = np.around(percent, 2)
-            rules[i].append("Quantidade: " + str(counts[i]) + " - " + str(percent) + "%")
-
-        rules = self._concat_rules(rules)
+            rules[i] = rules[i] + "Quantidade: " + str(counts[i]) + " - " + str(percent) + "%"
 
         return rules
 
