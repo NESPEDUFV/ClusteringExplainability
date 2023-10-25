@@ -1,7 +1,10 @@
+from logging.handlers import TimedRotatingFileHandler
 import pandas as pd
 from pandas.api.types import is_object_dtype
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier
+import re
+
 
 class CLEX(DecisionTreeClassifier):
 
@@ -185,9 +188,9 @@ class CLEX(DecisionTreeClassifier):
 
                 # Verifica se a variavel da amostra em questão é maio ou menor que o valor
                 if x_test.iloc[i, feature[node_id]] <= threshold[node_id]:
-                    threshold_sign = "menor ou igual a"
+                    threshold_sign = "<="
                 else:
-                    threshold_sign = "maior que"
+                    threshold_sign = ">"
 
                 is_bin = bin_columns and x_test.columns[feature[node_id]] in bin_columns
                 
@@ -195,39 +198,45 @@ class CLEX(DecisionTreeClassifier):
                 if(is_bin): 
                     feature_name = x_test.columns[feature[node_id]]
                     if(x_test.iloc[i, feature[node_id]] == 1):    
-                        conditions += "É {feature_name} &&\n".format(
+                        conditions += ("IS {feature_name}&&\n".format(
                                 feature_name=feature_name)
+                            )
 
                     else:
-                        conditions += "Não é {feature_name} &&\n".format(
+                        conditions += ("NOT IS {feature_name}&&\n".format(
                                 feature_name=feature_name)
+                            )
                 
                 else:
-                    conditions += "{feature_name} {inequality} {threshold} &&\n".format(
+                    conditions += ("{feature_name} {inequality} {threshold}&&\n".format(
                             inequality=threshold_sign,
                             threshold=round(threshold[node_id], 2),
                             feature_name=x_test.columns[feature[node_id]])
+                    )
 
-            if(porc_value >= 0):        
-                rules.append(conditions) 
+            if(porc_value >= 0):      
+                rules.append(conditions.strip("&&\n")) 
 
         rules, counts = np.unique(rules, return_counts=True)        
         rules = rules.astype("U500")
 
         # filtrar regras inuteis
-        for rule in range(len(rules)):
+        new_rules = []
+        for i, rule in enumerate(rules):
             positives = []
-            rules_splited = rules[rule].split("\n")[:-1]
-            for condition in rules_splited:   
-                    if(condition[0] == "É"):
-                        feature_name = condition[2:-3]
-                        if(feature_name in mutually_exclusives_keys):
-                                index = mutually_exclusives_keys[feature_name]
-                                positives.extend(mutually_exclusives[index])
+            for condition in rule:
+                
+                if(condition[:3] == "IS "):
+                    feature_name = condition[3:]
+                    if(feature_name in mutually_exclusives_keys):
+                            index = mutually_exclusives_keys[feature_name]
+                            positives.extend(mutually_exclusives[index])
 
-            conditions_filtered  = self._filter_rules(rules_splited, positives)
-            rules[rule] = conditions_filtered
+            conditions_filtered  = self._filter_rules(rule, positives)
+            new_rules.append(conditions_filtered)
         
+        new_rules = np.array(new_rules, dtype="object")
+        rules = new_rules
         total = np.sum(counts)
 
         # filtrar por uma porcentagem minima de amostras na regra
@@ -235,6 +244,9 @@ class CLEX(DecisionTreeClassifier):
         rules = rules[rules_filter]
         counts = counts[rules_filter]
 
+        #adiciona regras do tipo between
+        rules = [self._preprocess_rules(rules[i]) for i in range(len(rules))]
+        
         for i in range(len(rules)):
             percent = counts[i]/total * 100
             percent = np.around(percent, 2)
@@ -243,21 +255,62 @@ class CLEX(DecisionTreeClassifier):
         return rules
 
     def _filter_rules(self, rules, to_remove):
-        new_rules = ""
+        new_rules = []
         for idx, i in enumerate(rules): 
-            if("Não" in i):
-                feature_name = i[6:-3]
+            if("NOT " == i[:4]):
+                feature_name = i[7:]
                 if(feature_name in to_remove):
                     continue
-            
-            
-            if(idx == len(rules) - 1):
-                new_rules += i.replace("&&", "") + "\n"
+                else:
+                    new_rules.append(i)
             else: 
-                new_rules += i + "\n"
+                new_rules.append(i)
 
         return new_rules
     
+    def _preprocess_rules(self, rules):
+        features = [re.split(r"<=|>", rules[i])[0].strip() for i in range(len(rules))]
+        features = np.unique(features)
+
+        dict_features = {feature: [-np.inf, np.inf] for feature in features}
+        new_rules = []
+
+        for i in rules:
+            if "<=" in i:
+                feature = i.split("<=")[0].strip()
+                value = i.split("<=")[1].strip()
+                dict_features[feature][1] = min(dict_features[feature][1],float(value)) 
+            elif ">" in i:
+                feature = i.split(">")[0].strip()
+                value = i.split(">")[1].strip()
+                dict_features[feature][0] = max(dict_features[feature][0],float(value))
+
+        for i in rules:
+            if("IS " in i or "NOT IS " in i):
+                new_rules.append(i)
+        
+        for i in dict_features.keys():
+            if(dict_features[i][0] != -np.inf and dict_features[i][1] != np.inf):
+                new_rules.append(f"{i} between {dict_features[i][0]} and {dict_features[i][1]}")
+            elif(dict_features[i][0] != -np.inf):
+                new_rules.append(f"{i} > {dict_features[i][0]}")
+            elif(dict_features[i][1] != np.inf):
+                new_rules.append(f"{i} <= {dict_features[i][1]}")
+
+        return new_rules
+
+    def _concat_rules(self, rules):
+
+        for idx_rules, rule in enumerate(rules):
+            rule_string = ""
+            for idx, val in enumerate(rule):
+                rule_string += val
+                if(idx < len(rule) - 1):
+                    rule_string += " &&\n"  
+            rules[idx_rules] = rule_string
+
+        return rules
+
     def top_features(self, k):
         importances_sorted = np.argsort(self.feature_importances_)
         features = self.data.columns
