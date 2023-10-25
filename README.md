@@ -96,3 +96,39 @@ ax = plot_tree(clex,
 
 plt.show()
 ```
+
+--------------------------
+## Cluster Description
+
+Para utilizar a descrição dos clusters, são necessárias duas etapas: 
+
+- Gerar a importância dos atributos
+- Utilizar as importâncias dos atributos para gerar a descrição dos clusters
+
+As duas etapas podem ser feitas da seguinte maneira: 
+
+Inicialmente é instanciado um objeto CDES, responsável por toda a descrição. 
+
+```python
+# parametros: minimo de importancia, numero de bins (inutil) e modelo para o G2PC
+cdes = CDES(0, 10, model)
+```
+
+O modelo contém alguns parâmetros, sendo o mais importante o min_per, referente a porcentagem mínima para um atributo ser considerado importante. Os outros atributos são para encontrar a importância dos atributos com as baselines.
+
+Após isso, é preciso encontrar as importâncias dos atributos:
+
+```python
+# parametros: minimo de importancia, numero de bins (inutil) e modelo para o G2PC
+pct_chg, pct_chg_acc = cldes.explain_it(X_train, y_train, X_test, y_test, 1, groups)
+```
+
+Para isso, é preciso separar os dados em treino e teste, onde o label do cluster será a variável independente para o modelos supervisionado utilizado na *permutation feature importance.* Além disso, é preciso passar um parâmetro com o número de repetiçõies das permutações e uma lista com o label dos grupos.
+
+Após isso, basta gerar a descrição dos clusters: 
+
+```python
+# parametros: dados com uma coluna "cluster" referente aos grupos, o grupo que se deseja gerar a descrição e a importância dos atributos
+cldes.generate_cluster_description(data, i, pct_chg)
+``
+

@@ -180,10 +180,10 @@ if __name__ == "__main__":
     cldes = CLDES(0, 10, kmeans)
 
     dados_porto_seguro()
-    sys.exit(0)
-    pct_chg, pct_chg_acc = cldes.explain_it(X_train, y_train, X_test, y_test, 10, groups)
-    print(iris_df.columns)
-    print(pct_chg)
+    #sys.exit(0)
+    #pct_chg, pct_chg_acc = cldes.explain_it(X_train, y_train, X_test, y_test, 10, groups)
+    #print(iris_df.columns)
+    #print(pct_chg)
 
     # ---------------------- g2pc
     #pct_change = cldes.group_permutation_change(X, predicted, 3, groups, 0, 0, 0)

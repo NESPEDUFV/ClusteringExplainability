@@ -135,7 +135,7 @@ class CLDES:
         sorte_fe_im = sorted(feature_importances, reverse=True)
 
         data = data[data["cluster"] == cluster]
-
+        data.drop("cluster", inplace=True)
         print(index_sort)
         columns_sorted = data.columns[index_sort]
         for col, imp in zip(columns_sorted, sorte_fe_im):
@@ -161,7 +161,6 @@ class CLDES:
                 
                 data_to_df[col] = value_counts.index[0]
             else:
-                #print(col, data[col])
                 lower = float(round(np.percentile(data[col], 15), 3))
                 upper = float(round(np.percentile(data[col], 85), 3))
                 interval = [lower, upper]
