@@ -1,67 +1,66 @@
+import logging
 import pandas as pd
 import numpy as np
 from scipy.stats import entropy
-from sklearn import svm 
-from sklearn.tree import DecisionTreeClassifier
+from sklearn import svm
 from sklearn.metrics import accuracy_score, recall_score
+from sklearn.model_selection import train_test_split
 
 class CLDES:
 
-    def __init__(self, min_per, num_bins = -1, model = None) -> None:
+    def __init__(self, min_per, num_bins = -1, model  = None) -> None:
         self._min_per = min_per
         self._num_bins = num_bins
-        self.model = model
+        self.model = model if model else svm.SVC()
+        self.logger = logging.getLogger(__name__).setLevel(logging.INFO)
 
 
-    def explain_it(self, X, Y_true, X_test, y_test, n_repeats, groups):
+    def permutation_feature_importance(self, X, Y, groups, n_repeats = 5):
+        x_train, x_test, y_train, y_test = train_test_split(X,
+                                                            Y,
+                                                            test_size=0.33, 
+                                                            random_state=42)
+
         y_test = np.array(y_test)
-        clusters = np.unique(Y_true)
-        clf = svm.SVC(decision_function_shape='ovo')
-        #clf = DecisionTreeClassifier()
-        clf.fit(np.array(X), Y_true) 
-        
+        clusters = np.unique(y_train)
+        self.model.fit(np.array(x_train), y_train)
 
-        Pct_Chg = np.zeros((n_repeats, len(np.unique(groups)), len(clusters))) # preallocate output matrix number of repeats x number of features
-        Pct_Chg_acc = np.zeros((n_repeats, len(np.unique(groups)))) # preallocate output matrix number of repeats x number of features
-        pct_chg_recall = np.zeros((len(np.unique(groups)), len(clusters))) # preallocate output matrix number of repeats x number of features
-        
-        y_predicted = clf.predict(X_test)
+        # preallocate output matrix number of repeats x number of features
+        pct_chg = np.zeros((n_repeats, len(np.unique(groups)), len(clusters)))
+        pct_chg_acc = np.zeros((n_repeats, len(np.unique(groups))))
+        pct_chg_recall = np.zeros((len(np.unique(groups)), len(clusters)))
+
+        y_predicted = self.model.predict(x_test)
         e_original = accuracy_score(y_test, y_predicted)
         r_original = recall_score(y_test, y_predicted, average=None)
-        print("Acc: ", e_original)
-        print("------ Inicio da permutação --------")
-        for j in np.unique(groups): 
-            print("Repeat: ", j)
-            for k in range(n_repeats): 
-                X_2 = np.copy(X_test)
-                X_2[:] = X_test[:] 
-                
-                Sub_Data = np.random.permutation(X_2[:, np.squeeze(list(groups == j*np.ones_like(groups)))]) # realiza a permutação
-                X_2[:, np.squeeze(list(groups == j*np.ones_like(groups)))] = Sub_Data # adiciona a permutaão na matriz
-                
-                Y_2 = clf.predict(X_2)
-                e_new = accuracy_score(y_test, Y_2)
-                r_new = recall_score(y_test, Y_2, average=None)
-                
-                #e_new = precision_score(y_test, Y_2, average=None)
+        self.logger.info("Initial model accuracy: %s", e_original)
+        self.logger.info("Starting permutation")
+        for j in np.unique(groups):
+            for k in range(n_repeats):
+                x_test_copy = np.copy(x_test)
+                x_test_copy[:] = x_test[:]
 
-                #e_new = e_new[cluster]
-                #e_original_cluster = e_original[cluster]
+                # permute features
+                features_to_permute = np.squeeze(list(groups == j*np.ones_like(groups)))
+                sub_data = np.random.permutation(x_test_copy[:, features_to_permute])
 
-                # calcular a porcentagem de mudança na precisão
-                #print("Pct_change ", e_original)
-                #print("Acc nova: ", e_new)
-                
-                Pct_Chg_acc[k,j] = (e_original - e_new) 
-                for g in clusters.astype(int):   
+                # include new permuted features
+                x_test_copy[:, features_to_permute] = sub_data
+
+                y_copy = self.model.predict(x_test_copy)
+                e_new = accuracy_score(y_test, y_copy)
+                r_new = recall_score(y_test, y_copy, average=None)
+
+                pct_chg_acc[k,j] = (e_original - e_new)
+                for g in clusters.astype(int):
                     pct_chg_recall[j, int(g)] += r_new[g]
                     cluster = y_test == g
-                    Pct_Chg[k, j, int(g)] = np.sum(Y_2[cluster] != y_test[cluster])/len(y_test[cluster])
+                    pct_chg[k, j, int(g)] = np.sum(y_copy[cluster] != y_test[cluster])/len(y_test[cluster])
 
        
         pct_chg_recall = pct_chg_recall/n_repeats
         pct_chg_recall = r_original - pct_chg_recall
-        return pct_chg_recall, Pct_Chg_acc
+        return pct_chg_recall, pct_chg_acc
 
     def group_permutation_change(self, X, Y, n_repeats, groups, random_state, cluster, check_var):
         
@@ -135,9 +134,9 @@ class CLDES:
         sorte_fe_im = sorted(feature_importances, reverse=True)
 
         data = data[data["cluster"] == cluster]
-        data.drop("cluster", inplace=True)
-        print(index_sort)
+
         columns_sorted = data.columns[index_sort]
+        print(columns_sorted)
         for col, imp in zip(columns_sorted, sorte_fe_im):
             print(col, " - ", imp)
 
@@ -161,6 +160,7 @@ class CLDES:
                 
                 data_to_df[col] = value_counts.index[0]
             else:
+                #print(col, data[col])
                 lower = float(round(np.percentile(data[col], 15), 3))
                 upper = float(round(np.percentile(data[col], 85), 3))
                 interval = [lower, upper]
