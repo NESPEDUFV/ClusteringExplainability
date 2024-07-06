@@ -1,14 +1,14 @@
 import logging
 import pandas as pd
 import numpy as np
-from scipy.stats import entropy
 from sklearn import svm
 from sklearn.metrics import accuracy_score, recall_score
 from sklearn.model_selection import train_test_split
 
 class CLDES:
 
-    def __init__(self, min_per, num_bins = -1, model  = None) -> None:
+    def __init__(self, min_per, min_importance = 0,  num_bins = -1, model  = None) -> None:
+        self.min_importance = min_importance
         self._min_per = min_per
         self._num_bins = num_bins
         self.model = model if model else svm.SVC()
@@ -107,68 +107,45 @@ class CLDES:
         else:
             return(Pct_Chg)
 
-
-    def _entropy1(self, labels, base=None, counts=None):
-        
-        value, counts = np.unique(labels, return_counts=True)
-        return entropy(counts)
-
-    def generate_cluster_description(self, data: pd.DataFrame, cluster: int, importances):
+    def _generate_cluster_description(self, data: pd.DataFrame, cluster: int, importances, cluster_col = "cluster"):
         data = data.dropna(axis=1)
 
         numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
         cols = data.select_dtypes(numerics).columns
-        continuos_vars = [x for x in cols if len(data[x].unique()) > 15 and data[x].dtype and x != "cluster"]
-        
-        #for col in continuos_vars: 
-        #    bins = np.histogram_bin_edges(data[col], bins="fd")
-        #    data[col] = pd.cut(data[col], bins)
+        continuos_vars = [x for x in cols if len(data[x].unique()) > 15 and x != cluster_col]
 
-        feature_importances = []
-        for i in range(importances.shape[0]):
-            feature_importances.append(importances[i][cluster])
+        feature_importances = list(importances[:][cluster])
 
-        #print(feature_importances)
+        self.logger.info("Feature importance for cluster %s: %s", cluster, feature_importances)
         index_sort = np.argsort(feature_importances)
         index_sort = index_sort[::-1]
-        sorte_fe_im = sorted(feature_importances, reverse=True)
+        sorted_feat_im = sorted(feature_importances, reverse=True)
 
-        data = data[data["cluster"] == cluster]
+        data = data[data[cluster_col] == cluster]
 
         columns_sorted = data.columns[index_sort]
-        print(columns_sorted)
-        for col, imp in zip(columns_sorted, sorte_fe_im):
-            print(col, " - ", imp)
+        self.logger.info("Features sorted by importance: %s", columns_sorted)
 
         data_to_df = {}
         for i, col in enumerate(columns_sorted):
-            if(sorte_fe_im[i] == 0):
+            if(sorted_feat_im[i] == 0 or sorted_feat_im < self.min_importance):
                 continue
-            if(col not in continuos_vars):
+
+            if col not in continuos_vars:
                 value_counts = data[col].value_counts()
                 percs = value_counts/data.shape[0]
                 percs_idx = percs[percs >= self._min_per].index
                 percs = percs[percs_idx].values
-                values = value_counts[percs_idx].values    
-                
-                #print("")
-                print(f"{col}: {percs[0]}% valores {percs_idx[0]}")
-                #print(pd.DataFrame({
-                #    "porc.": percs,
-                #    "valores": percs_idx
-                #}))
-                
+                values = value_counts[percs_idx].values
+
+                for value, percentage in zip(percs, values):
+                    print(f"{col}: {percentage}% valores {value}")
+
                 data_to_df[col] = value_counts.index[0]
             else:
-                #print(col, data[col])
-                lower = float(round(np.percentile(data[col], 15), 3))
-                upper = float(round(np.percentile(data[col], 85), 3))
-                interval = [lower, upper]
+                lower = float(round(np.percentile(data[col], 10), 3))
+                upper = float(round(np.percentile(data[col], 90), 3))
+
                 values = pd.IntervalIndex.from_arrays([lower], [upper], closed="both")
                 data_to_df[col] = values
-                print(f"Values - {col}: {values} - 75%")
-                print("")
-        
-        print(data_to_df)
-        
-        #print(data.head())
+                print(f"{col}: 80% values between {values}")
