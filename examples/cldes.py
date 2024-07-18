@@ -1,11 +1,8 @@
 import os
 import sys
 
-# adicionar caminho do script
-path = "/home/cinnecta/Documentos/cluster_explainability-20230404T024033Z-001"
-sys.path.insert(0, path + "/cluster_explainability")
-from cldes import CLDES
-from clex import CLEX
+from cluster_description.cldes import CLDES
+from cluster_description.clex import CLEX
 from sklearn.datasets import load_iris, load_wine
 import pandas as pd
 import numpy as np
@@ -15,8 +12,6 @@ from sklearn.cluster import KMeans
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.datasets import make_blobs
-import seaborn as sns
-sns.set()
 
 
 def dados_simulados():
@@ -154,11 +149,8 @@ if __name__ == "__main__":
 
     iris = load_iris()
     scaler = MinMaxScaler()
-
     iris_df = pd.DataFrame(data= np.c_[iris['data'], iris['target']],
                         columns= iris['feature_names'] + ['cluster'])
-
-
 
     X = iris_df.drop("cluster", axis=1)
 
@@ -168,38 +160,15 @@ if __name__ == "__main__":
     kmeans = KMeans(3).fit(X)
     predicted = kmeans.predict(X)
 
-    #dados_simulados()
-    #sys.exit()
-    X_train, X_test, y_train, y_test = train_test_split(X, 
-                                                            iris_df["cluster"], 
-                                                            test_size=0.20, 
-                                                            random_state=42)
+    X_train, X_test, y_train, y_test = train_test_split(X,
+                                                        iris_df["cluster"],
+                                                        test_size=0.20, 
+                                                        random_state=42)
 
-
-    groups = [i for i in range(len(X_train.columns))]
-    cldes = CLDES(0, 10, kmeans)
-
-    dados_porto_seguro()
-    #sys.exit(0)
-    #pct_chg, pct_chg_acc = cldes.explain_it(X_train, y_train, X_test, y_test, 10, groups)
-    #print(iris_df.columns)
-    #print(pct_chg)
-
-    # ---------------------- g2pc
-    #pct_change = cldes.group_permutation_change(X, predicted, 3, groups, 0, 0, 0)
-
-    #print(pct_change)
-    for i in range(3):
-        print(f"Grupo: {i}")
-        print("")
-        cldes.generate_cluster_description(iris_df, i, pct_chg)
-
-    #df = pd.read_csv("/home/guilherme/Documentos/porto_seguro/data/personas_new.csv", index_col=0)
-    #print(df.head())
-
-    #print(df.info())
-
-    # ---------------- cluster description
-
-    #cldes.generate_cluster_description(df.drop("cod_pessoa", axis=1), 1)
-
+    groups = [i for i in range(len(X.columns))]
+    cldes = CLDES(0,
+                  0)
+    
+    groups = [i for i in range(len(X.columns))]
+    cldes.permutation_feature_importance(X, predicted, groups=groups)
+    cldes.get_cluster_description(X, predicted, 0)

@@ -2,10 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sys
 
-# adicionar caminho do script
-path = "/home/guilherme/Documentos"
-sys.path.insert(0, path + "/cluster_explainability")
-from clex import CLEX
+from cluster_description.clex import CLEX
 from sklearn.datasets import load_iris, make_blobs
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.cluster import KMeans
@@ -66,8 +63,8 @@ plt.show()
 
 # visualizar a árvore criada com as regras completas
 fig = plt.figure(figsize=(40,40))
-ax = plot_tree(clex, 
-                filled=False, 
+ax = plot_tree(clex,
+                filled=False,
                 feature_names=data.drop("cluster", axis=1).columns,
                 fontsize=12,
                 label="all",
