@@ -1,7 +1,7 @@
 import os
 import sys
 
-from cluster_description.cldes import CLDES
+from cluster_description.cldes import CLDES, PREDICATES
 from cluster_description.clex import CLEX
 from sklearn.datasets import load_iris, load_wine
 import pandas as pd
@@ -171,4 +171,4 @@ if __name__ == "__main__":
     
     groups = [i for i in range(len(X.columns))]
     cldes.permutation_feature_importance(X, predicted, groups=groups)
-    cldes.get_cluster_description(X, predicted, 0)
+    cldes.get_cluster_description(X, predicted, 0, "predicates")

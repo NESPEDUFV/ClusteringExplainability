@@ -6,6 +6,9 @@ from sklearn import svm
 from sklearn.metrics import accuracy_score, recall_score
 from sklearn.model_selection import train_test_split
 
+from cluster_description.description import Description
+from cluster_description.predicates import Predicates
+
 
 PREDICATES = "predicates"
 DESCRIPTION = "description"
@@ -34,7 +37,8 @@ class CLDES:
                 self._generate_cluster_description(data,
                                                    labels,
                                                    cluster,
-                                                   importance_metric)
+                                                   importance_metric,
+                                                   output_type=DESCRIPTION)
     
     def get_cluster_description(self,
                                 data,
@@ -42,13 +46,13 @@ class CLDES:
                                 cluster,
                                 output_type: Union[PREDICATES, DESCRIPTION] = DESCRIPTION,
                                 importance_metric = "recall"):
-        
-        if output_type == DESCRIPTION:
-            self.logger.info("Generating %s", DESCRIPTION)
-            self._generate_cluster_description(data,
-                                                labels,
-                                                cluster,
-                                                importance_metric)
+
+        self.logger.info("Generating %s", output_type)
+        self._generate_cluster_description(data,
+                                            labels,
+                                            cluster,
+                                            importance_metric,
+                                            output_type)
 
             
 
@@ -87,7 +91,7 @@ class CLDES:
                 y_copy = self.model.predict(x_test_copy)
                 e_new = accuracy_score(y_test, y_copy)
                 r_new = recall_score(y_test, y_copy, average=None)
-                pct_chg_acc[k,j] = (e_original - e_new)
+                pct_chg_acc[k,j] = e_original - e_new
                 for g in clusters.astype(int):
                     pct_chg_recall[j, int(g)] += r_new[g]
                     cluster = y_test == g
@@ -115,7 +119,7 @@ class CLDES:
                 np.random.seed(seed=k)
                 X_2 = np.copy(X)
                 X_2[:] = X[:] # duplicate data array
-                
+
                 Sub_Data = np.random.permutation(X_2[:, np.squeeze(list(groups == j*np.ones_like(groups)))]) # shuffle feature
                 X_2[:, np.squeeze(list(groups == j*np.ones_like(groups)))] = Sub_Data # add shuffled data to data matrix
                 if check_var == 1:
@@ -130,21 +134,27 @@ class CLDES:
 
                 Y_ = Y[Y_CLUSTER] # contar a pct de mudança apenas para determinado grupo
                 Y_2_ = Y_2[Y_CLUSTER]
-                
+
                 #print(np.sum(np.array(Y)!=np.array(Y_2))/len(np.squeeze(Y)))
-                Pct_Chg[k,j] = np.sum(np.array(Y_)!=np.array(Y_2_))/len(np.squeeze(Y)) # calculate percent change
+                # calculate percent change
+                Pct_Chg[k,j] = np.sum(np.array(Y_)!=np.array(Y_2_))/len(np.squeeze(Y))
                 if check_var == 1:
                     R[:,j] += np.squeeze(np.array(Y)!=np.array(Y_2))/n_repeats
                     VarData[:,j] = np.mean(np.var(Record,axis= 2),axis=1)
                     MeanData[:,j] = np.mean(np.mean(Record,axis= 2),axis=1)
 
-                    
+
         if check_var == 1:
             return(Pct_Chg, R, VarData, MeanData)
         else:
             return(Pct_Chg)
 
-    def _generate_cluster_description(self, data: pd.DataFrame, labels: Union[np.array, pd.Series, list], cluster: int, importance_type: str = "recall"):
+    def _generate_cluster_description(self, 
+                                      data: pd.DataFrame, 
+                                      labels: Union[np.array, pd.Series, list], 
+                                      cluster: int, 
+                                      importance_type: str = "recall",
+                                      output_type: str = DESCRIPTION):
         data = data.dropna(axis=1)
         importances = self.pct_chg_recall if importance_type == "recall" else self.pct_chg_acc
         numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
@@ -176,7 +186,9 @@ class CLDES:
                 values = value_counts[percs_idx].values
 
                 for value, percentage in zip(percs, values):
-                    print(f"{col}: {percentage}% valores {value}")
+                    description = Description.discrete_vars(col, percentage, value) \
+                          if output_type == DESCRIPTION else Predicates.contains(col, value)
+                    print(description)
 
                 data_to_df[col] = value_counts.index[0]
             else:
@@ -185,4 +197,7 @@ class CLDES:
 
                 values = f"[{lower}, {upper}]"
                 data_to_df[col] = values
-                print(f"{col}: 80% values between {values}")
+                description = Description.continuos_vars(col, lower, upper) \
+                    if output_type == DESCRIPTION else Predicates.percentile(col, 80, lower, upper)
+
+                print(description)
