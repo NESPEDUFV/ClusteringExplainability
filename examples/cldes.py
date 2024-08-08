@@ -1,8 +1,8 @@
 import os
 import sys
 
-from cluster_description.cldes import CLDES
-from cluster_description.clex import CLEX
+from cluster_description import CLDES
+from cluster_description import CLEX
 from sklearn.datasets import load_iris, load_wine
 import pandas as pd
 import numpy as np

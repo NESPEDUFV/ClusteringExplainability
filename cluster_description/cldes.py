@@ -6,12 +6,11 @@ import pandas as pd
 from sklearn import svm
 from sklearn.metrics import accuracy_score, recall_score
 from sklearn.model_selection import train_test_split
-
-from cluster_description.description import Description
-from cluster_description.predicates import Predicates
+import description as Description
+import predicates as Predicates
 
 class OutputType(enum.Enum):
-    PREDICATES = "predicates"
+    PREDICATES  = "predicates. "
     DESCRIPTION = "description"
 
 class CLDES:
@@ -67,7 +66,8 @@ class CLDES:
         - None
         """
         self.logger.info("Generating %s", output_type)
-        self._generate_cluster_description(data, labels, cluster, importance_metric, output_type)
+        descriptionUser, columns_sorted = self._generate_cluster_description(data, labels, cluster, importance_metric, output_type)
+        return descriptionUser, columns_sorted
 
     def permutation_feature_importance(self, X, Y, groups, n_repeats=5):
         """
@@ -225,9 +225,11 @@ class CLDES:
         self.logger.info("Features sorted by importance: %s", columns_sorted)
 
         data_to_df = {}
-        for i, col in enumerate(columns_sorted):
-            if sorted_feat_im[i] == 0 or sorted_feat_im[i] < self.min_importance:
-                continue
+        
+        generalDescription = []
+        for i, col in enumerate(columns_sorted):            
+            # if sorted_feat_im[i] == 0 or sorted_feat_im[i] < self.min_importance:
+            #     continue
 
             if col not in continuos_vars:
                 value_counts = data[col].value_counts()
@@ -238,17 +240,18 @@ class CLDES:
 
                 for value, percentage in zip(percs, values):
                     description = Description.discrete_vars(col, percentage, value) \
-                        if output_type == OutputType.DESCRIPTION else Predicates.contains(col, value)
-                    print(description)
-
+                        if output_type == OutputType.DESCRIPTION else Predicates.Predicates.contains(col, value)
+                    generalDescription.append(description)
+                    # print(description)
                 data_to_df[col] = value_counts.index[0]
             else:
                 lower = float(round(np.percentile(data[col], 10), 3))
                 upper = float(round(np.percentile(data[col], 90), 3))
-
+                
                 values = f"[{lower}, {upper}]"
                 data_to_df[col] = values
                 description = Description.continuos_vars(col, lower, upper) \
-                    if output_type == OutputType.DESCRIPTION else Predicates.percentile(col, 80, lower, upper)
+                    if output_type == OutputType.DESCRIPTION else Predicates.Predicates.percentile(col, 80, lower, upper)
 
-                print(description)
+                generalDescription.append(description)
+        return generalDescription, columns_sorted    
