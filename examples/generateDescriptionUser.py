@@ -1,16 +1,21 @@
-from cldes import CLDES
-from clex import CLEX
 from sklearn.datasets import load_iris, load_wine
 import pandas as pd
 import numpy as np
-from sklearn.tree import plot_tree
-import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
-from sklearn.datasets import make_blobs
-import seaborn as sns
-from promptGemini import PromptGemini as gemini
+from sklearn.preprocessing import MinMaxScaler
+import os
+import sys
+import asyncio
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from cluster_description.cldes import CLDES
+from api.promptGemini import PromptGemini as gemini
+
+async def main():
+    gemini_instance = gemini(descriptionUser, columns_sorted)
+    await gemini_instance.generate() 
 
 iris = load_iris()
 scaler = MinMaxScaler()
@@ -37,9 +42,8 @@ groups = [i for i in range(len(X.columns))]
 cldes.permutation_feature_importance(X, predicted, groups=groups)
 descriptionUser, columns_sorted = cldes.get_cluster_description(X, predicted, 0, "predicates")
 
-#descriptionUser = gemini.format_description(0, descriptionUser)
-gemini = gemini(descriptionUser, columns_sorted)
-gemini.generate()
+descriptionUser = gemini.format_description(0, descriptionUser)
+asyncio.run(main())
 
 
 

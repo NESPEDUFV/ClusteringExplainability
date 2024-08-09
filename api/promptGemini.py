@@ -1,6 +1,7 @@
+# %pip install -q -U google-generativeai
+# %pip install python-dotenv
 
-
-import google.generativeai as genai
+import google.generativeai as gemini
 from dotenv import load_dotenv
 import os
 
@@ -9,16 +10,16 @@ class PromptGemini:
         self.cluster = cluster
         self.semantic = semantic
 
-    def generate(self):
+    async def generate(self):
         load_dotenv()
         API_KEY = os.getenv("API_KEY")
-        genai.configure(api_key=API_KEY)
+        gemini.configure(api_key=API_KEY)
 
-        #for m in genai.list_models():
+        #for m in gemini.list_models():
             #if 'generateContent' in m.supported_generation_methods:
                 #print(m.name)
 
-        model = genai.GenerativeModel("gemini-1.5-pro-latest")
+        model = gemini.GenerativeModel("gemini-1.5-pro-latest")
 
         prompt = """
         Você é um AI especialista em interpretar clusters de dados. Sua tarefa é transformar a descrição de clusters gerados por um algoritmo em narrativas claras, detalhadas e compreensíveis para o público leigo. Cada cluster é definido por um conjunto de características formais, e você deve elaborar uma descrição rica e acessível, fornecendo contexto e explicações quando necessário.
@@ -31,12 +32,15 @@ class PromptGemini:
         4. Comparação das características marcantes: Faça comparações das características marcantes de cada cluster.
         """
 
-        semantica = str(self.semantic)
+        #semantica = str(self.semantic)
         cluster = str(self.cluster)
 
-        pergunta = semantica + cluster
+        #pergunta = semantica + cluster
+        pergunta = cluster
         
-        print(pergunta)
+        print("\n")
+        print("Gerando descrição do cluster...")
+        print("\n")
 
         chat = model.start_chat(history=[])
 

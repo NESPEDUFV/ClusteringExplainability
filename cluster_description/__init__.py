@@ -1,2 +1,2 @@
-from .cldes import CLDES as CLDES
-from .clex import CLEX as CLEX
+from .cldes import CLDES
+from .clex import CLEX

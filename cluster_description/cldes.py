@@ -6,8 +6,17 @@ import pandas as pd
 from sklearn import svm
 from sklearn.metrics import accuracy_score, recall_score
 from sklearn.model_selection import train_test_split
-import description as Description
-import predicates as Predicates
+
+import os
+import sys
+
+
+path = '/cluster_description/'
+
+sys.path.append(path)
+
+from .description import Description
+from .predicates import Predicates
 
 class OutputType(enum.Enum):
     PREDICATES  = "predicates. "
@@ -240,7 +249,7 @@ class CLDES:
 
                 for value, percentage in zip(percs, values):
                     description = Description.discrete_vars(col, percentage, value) \
-                        if output_type == OutputType.DESCRIPTION else Predicates.Predicates.contains(col, value)
+                        if output_type == OutputType.DESCRIPTION else Predicates.contains(col, value)
                     generalDescription.append(description)
                     # print(description)
                 data_to_df[col] = value_counts.index[0]
@@ -251,7 +260,7 @@ class CLDES:
                 values = f"[{lower}, {upper}]"
                 data_to_df[col] = values
                 description = Description.continuos_vars(col, lower, upper) \
-                    if output_type == OutputType.DESCRIPTION else Predicates.Predicates.percentile(col, 80, lower, upper)
+                    if output_type == OutputType.DESCRIPTION else Predicates.percentile(col, 80, lower, upper)
 
                 generalDescription.append(description)
         return generalDescription, columns_sorted    
