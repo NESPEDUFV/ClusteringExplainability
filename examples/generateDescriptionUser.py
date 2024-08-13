@@ -14,7 +14,7 @@ from cluster_description.cldes import CLDES
 from api.promptGemini import PromptGemini as gemini
 
 async def main():
-    gemini_instance = gemini(descriptionUser, columns_sorted)
+    gemini_instance = gemini(formatted_output, columns_sorted)
     await gemini_instance.generate() 
 
 iris = load_iris()
@@ -38,12 +38,13 @@ X_train, X_test, y_train, y_test = train_test_split(X,
 groups = [i for i in range(len(X.columns))]
 cldes = CLDES(0.01, 10, kmeans)
 
-groups = [i for i in range(len(X.columns))]
 cldes.permutation_feature_importance(X, predicted, groups=groups)
-descriptionUser, columns_sorted = cldes.get_cluster_description(X, predicted, 0, "predicates")
 
-descriptionUser = gemini.format_description(0, descriptionUser)
+clusterDescription = []
+for cluster in np.unique(predicted):
+    descriptionUser, columns_sorted = cldes.get_cluster_description(data=X, labels=predicted, cluster=cluster, output_type="description")
+    clusterDescription.append(descriptionUser)
+    
+formatted_output = gemini.format_cluster_descriptions(clusterDescription)
+
 asyncio.run(main())
-
-
-
