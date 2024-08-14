@@ -35,7 +35,7 @@ class PromptGemini:
         4. Comparação das características marcantes: Faça comparações das características marcantes de cada cluster.
         """
 
-        #semantica = str(self.semantic)
+        semantica = str(self.semantic)
         cluster = str(self.cluster)
 
         #pergunta = semantica + cluster
@@ -49,8 +49,10 @@ class PromptGemini:
 
         response = chat.send_message(prompt)
         response = chat.send_message(pergunta)
-        print(response.text)
         
+        self.save_response_to_file(response.text, directory="out", filename="output.md")
+       
+    @staticmethod 
     def format_cluster_descriptions(cluster_descriptions):
         formatted_output = ""
         for i, description in enumerate(cluster_descriptions):
@@ -59,3 +61,14 @@ class PromptGemini:
                 formatted_output += f"{line}\n"
             formatted_output += "\n"
         return formatted_output.strip()
+    
+    def save_response_to_file(self, response, directory="../out", filename="output.md"):
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        
+        filepath = os.path.join(directory, filename)
+        
+        with open(filepath, "w") as file:
+            file.write(response)
+        
+        print(f"Response saved to {filepath}")
