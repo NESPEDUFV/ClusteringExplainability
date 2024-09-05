@@ -263,4 +263,44 @@ class CLDES:
                     if output_type == OutputType.DESCRIPTION else Predicates.percentile(col, 80, lower, upper)
 
                 generalDescription.append(description)
-        return generalDescription, columns_sorted    
+        return generalDescription, columns_sorted  
+    
+    def calculate_coverage(self, rule, X, predicted, cluster):
+        """
+        Calcula a cobertura de uma regra.
+        rule: conjunto de predicados que definem o cluster
+        X: dataset original
+        predicted: rótulos previstos pelo algoritmo de clustering
+        cluster: o cluster específico para o qual a cobertura está sendo calculada
+        """
+        
+        total_in_cluster = np.sum(predicted == cluster)
+        
+        covered_in_cluster = np.sum((X.apply(rule, axis=1)) & (predicted == cluster))
+
+        coverage = covered_in_cluster / total_in_cluster
+        return coverage
+
+    def calculate_separation_error(self, rule, X, predicted, cluster):
+        """
+        Calcula o erro de separação de uma regra.
+        rule: conjunto de predicados que definem o cluster
+        X: dataset original
+        predicted: rótulos previstos pelo algoritmo de clustering
+        cluster: o cluster específico para o qual o erro está sendo calculado
+        """
+
+        total_covered = np.sum(X.apply(rule, axis=1))
+
+        covered_outside_cluster = np.sum((X.apply(rule, axis=1)) & (predicted != cluster))
+
+        separation_error = covered_outside_cluster / total_covered
+        return separation_error
+
+    def calculate_conciseness(self, rule_str):
+        """
+        Calcula a concisão de uma regra com base no número de predicados.
+        rule_str: string que define a regra no formato '<atributo, tipo, [valores]>'
+        """
+        # Toda regra usa um predicato
+        return 1

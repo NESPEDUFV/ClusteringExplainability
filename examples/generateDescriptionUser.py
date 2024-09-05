@@ -13,11 +13,26 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from cluster_description.cldes import CLDES
 from api.promptGemini import PromptGemini as gemini
 
-def load_and_preprocess_data(dataset_loader):
+def load_and_preprocess_data_iris(dataset_loader):
     data = dataset_loader()
     df = pd.DataFrame(data=np.c_[data['data'], data['target']],
                       columns=data['feature_names'] + ['cluster'])
     X = df.drop("cluster", axis=1)
+    
+    scaler = MinMaxScaler()
+    for col in X.columns:
+        X[col] = scaler.fit_transform(X[col].values.reshape(-1, 1))
+    
+    return X, df
+def load_and_preprocess_data_wine(dataset_loader):
+    data = dataset_loader()
+    df = pd.DataFrame(data.data, columns=data.feature_names)
+    
+    df['target'] = data.target
+    
+    df.rename(columns={'od280/od315_of_diluted_wines': 'Absorbância_280_vs_315'}, inplace=True)
+    
+    X = df.drop("target", axis=1)
     
     scaler = MinMaxScaler()
     for col in X.columns:
@@ -30,9 +45,9 @@ def perform_clustering(X, n_clusters=3):
     predicted = kmeans.predict(X)
     return kmeans, predicted
 
-def describe_clusters(X, predicted, kmeans):
+def describe_clusters(X, predicted, cldes):
     groups = [i for i in range(len(X.columns))]
-    cldes = CLDES(0.01, 10, kmeans)
+
     cldes.permutation_feature_importance(X, predicted, groups=groups)
     
     cluster_descriptions = []
@@ -45,14 +60,62 @@ def describe_clusters(X, predicted, kmeans):
 def format_cluster_descriptions(cluster_descriptions):
     return gemini.format_cluster_descriptions(cluster_descriptions)
 
+def calculate_metrics_for_all_clusters(cldes, X, predicted, formatted_output):
+    clusters = parse_formatted_output(formatted_output)
+    
+    for cluster, rules in clusters.items():
+        print(f"--- Métricas para o Cluster {cluster} ---")
+        
+        for rule_str in rules:
+            rule = parse_rule(rule_str) 
+            
+            coverage = cldes.calculate_coverage(rule, X, predicted, cluster)
+            separation_error = cldes.calculate_separation_error(rule, X, predicted, cluster)
+            conciseness = cldes.calculate_conciseness(rule_str)
+            
+            print(f"Regra: {rule_str}")
+            print(f"Coverage: {coverage}")
+            print(f"Separation Error: {separation_error}")
+            print(f"Conciseness: {conciseness}")
+            print()
+
+def parse_rule(rule_str):
+    parts = rule_str.strip('<>').split(", ", 2)
+    
+    if len(parts) == 3:
+        attribute, rule_type, values_str = parts
+        values = eval(values_str)
+        lower_bound, upper_bound = values
+        
+        return lambda x: lower_bound <= x[attribute] <= upper_bound
+    else:
+        raise ValueError(f"Formato inesperado na regra: {rule_str}")
+
+def parse_formatted_output(formatted_output):
+    clusters = {}
+    current_cluster = None
+    for line in formatted_output.splitlines():
+        if line.startswith("cluster"):
+            current_cluster = int(line.split()[1][:-1])
+            clusters[current_cluster] = []
+        elif line:
+            clusters[current_cluster].append(line.strip('<>'))
+    return clusters
+
 async def main_workflow(dataset_loader):
-    X, df = load_and_preprocess_data(dataset_loader)
+    X, df = load_and_preprocess_data_wine(dataset_loader)
     kmeans, predicted = perform_clustering(X)
-    cluster_descriptions, columns_sorted = describe_clusters(X, predicted, kmeans)
+    
+    cldes = CLDES(0.01, 10, kmeans)
+    
+    cluster_descriptions, columns_sorted = describe_clusters(X, predicted, cldes)
     formatted_output = format_cluster_descriptions(cluster_descriptions)
     
-    gemini_instance = gemini(formatted_output, columns_sorted)
-    await gemini_instance.generate()
+    print(formatted_output)
+    
+    calculate_metrics_for_all_clusters(cldes, X, predicted, formatted_output)
+    #gemini_instance = gemini(formatted_output, columns_sorted)
+    #await gemini_instance.generate()
 
-#asyncio.run(main_workflow(load_iris))
 asyncio.run(main_workflow(load_wine))
+
