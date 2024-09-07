@@ -22,17 +22,20 @@ class PromptGemini:
         model = gemini.GenerativeModel("gemini-1.5-pro-latest")
 
         prompt = """
-        Você é um AI especialista em interpretar clusters de dados. Sua tarefa é transformar a descrição de clusters gerados 
-        por um algoritmo em narrativas claras, detalhadas e compreensíveis para o público leigo. 
-        Cada cluster é definido por um conjunto de características formais, e você deve elaborar 
-        uma descrição rica e acessível, fornecendo contexto e explicações quando necessário.
-        Antes de seguir o passo a passo o algoritmo pode gerar os cluster no formato 
-        <característica, 80-between, intervalo>. 80-between mostra que 80% dos dados estão entre certo intervalo indicado.
-        Para gerar a Descrição você deve seguir os seguintes passos:
+        Você é um AI especialista em interpretar clusters de dados. Sua tarefa é transformar a descrição de clusters 
+        gerados por um algoritmo em narrativas claras e acessíveis para o público leigo. Cada cluster é definido por 
+        um conjunto de características formais. Para gerar a descrição, siga os passos abaixo:
         1. Identifique as Características Principais: Extraia as características mais relevantes dos clusters fornecidos.
-        2. Contextualize e Simplifique: Explique o que essas características significam no contexto do grupo descrito. Detalhe as informações obtidas e as contextualizes. Agora simplifique, use uma linguagem simples e direta para garantir que qualquer pessoa possa entender a descrição.
-        3. Característica marcante: Destaque uma característica caso existir que faz aquele cluster ser único, que o diferencie dos demais, é preferível que nenhum outro cluster tenha essa características, caso não encontre informe que o clusters não tem característica marcante.
-        4. Comparação das características marcantes: Faça comparações das características marcantes de cada cluster.
+        2. Contextualize e Simplifique: Explique o que essas características significam no contexto do grupo descrito. Detalhe as informações e use uma linguagem simples e direta para garantir que qualquer pessoa possa entender.
+        3. Características Marcantes: Destaque uma característica única que diferencia o cluster dos demais. Se não houver tal característica, informe que o cluster não possui uma característica marcante.
+        4. Comparação das Características Marcantes: Compare as características marcantes de cada cluster. Elabore sobre como essas características se diferenciam entre os clusters.
+        5. Métricas do Cluster: Considere as seguintes métricas para cada cluster:
+            Coverage: Mede a proporção de pontos de dados que pertencem a um cluster específico e que são descritos pela explicação. Uma alta cobertura indica que a explicação é válida para a maioria dos pontos do cluster.
+            Separation Error: Mede a proporção de pontos que a explicação considera válidos, mas que na verdade pertencem a outros clusters. Um baixo erro de separação é desejável, pois indica que a explicação é específica para o cluster em questão e não se aplica a pontos de outros clusters.
+            Conciseness: Refere-se à simplicidade e brevidade da explicação. Uma explicação concisa é mais fácil de entender e interpretar. A concisão é medida pelo número de predicados que compõem a explicação; quanto menor o número de predicados, maior a concisão.
+            
+        Formato de Saída: Apresente suas descrições em parágrafos claros, assegurando que sejam compreensíveis e informativas para um público leigo.
+        Exemplo de Entrada: "<característica, 80-between, intervalo>
         """
 
         semantica = str(self.semantic)

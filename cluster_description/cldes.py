@@ -265,42 +265,57 @@ class CLDES:
                 generalDescription.append(description)
         return generalDescription, columns_sorted  
     
-    def calculate_coverage(self, rule, X, predicted, cluster):
+    def calculate_coverage(self, rules, X, predicted, cluster):
         """
-        Calcula a cobertura de uma regra.
-        rule: conjunto de predicados que definem o cluster
-        X: dataset original
+        Calcula a cobertura de um conjunto de regras para um cluster.
+        rules: lista de funções (cada função avalia um predicado da explicação do cluster)
+        X: dataset original (DataFrame)
         predicted: rótulos previstos pelo algoritmo de clustering
         cluster: o cluster específico para o qual a cobertura está sendo calculada
         """
         
-        total_in_cluster = np.sum(predicted == cluster)
+        cluster_points = X[predicted == cluster]
         
-        covered_in_cluster = np.sum((X.apply(rule, axis=1)) & (predicted == cluster))
-
+        total_in_cluster = len(cluster_points)
+        
+        if total_in_cluster == 0:
+            return 0 
+        
+        def apply_rules(row):
+            return all(rule(row) for rule in rules)
+        
+        covered_in_cluster = np.sum(cluster_points.apply(apply_rules, axis=1))
+        
         coverage = covered_in_cluster / total_in_cluster
+
         return coverage
 
-    def calculate_separation_error(self, rule, X, predicted, cluster):
+
+    def calculate_separation_error(self, rules, X, predicted, cluster):
         """
-        Calcula o erro de separação de uma regra.
-        rule: conjunto de predicados que definem o cluster
+        Calcula o erro de separação de um conjunto de regras.
+        rules: conjunto de predicados que definem o cluster
         X: dataset original
         predicted: rótulos previstos pelo algoritmo de clustering
         cluster: o cluster específico para o qual o erro está sendo calculado
         """
 
-        total_covered = np.sum(X.apply(rule, axis=1))
+        covered = np.all([X.apply(rule, axis=1) for rule in rules], axis=0)
 
-        covered_outside_cluster = np.sum((X.apply(rule, axis=1)) & (predicted != cluster))
+        covered_outside_cluster = np.sum(covered & (predicted != cluster))
 
-        separation_error = covered_outside_cluster / total_covered
+        total_covered = np.sum(covered) + covered_outside_cluster
+
+        separation_error = covered_outside_cluster / total_covered if total_covered > 0 else 0
+
         return separation_error
 
-    def calculate_conciseness(self, rule_str):
+
+    def calculate_conciseness(self, rules):
         """
         Calcula a concisão de uma regra com base no número de predicados.
-        rule_str: string que define a regra no formato '<atributo, tipo, [valores]>'
+        rules: lista de predicados que definem o cluster (cada predicado é uma regra).
         """
-        # Toda regra usa um predicato
-        return 1
+        num_predicates = len(rules)
+        conciseness = 1 / num_predicates if num_predicates > 0 else 0
+        return conciseness

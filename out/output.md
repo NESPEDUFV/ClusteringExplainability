@@ -1,26 +1,33 @@
-## An√°lise dos Clusters de Vinhos:
+## An·lise dos Clusters de Vinhos:
 
-Aqui est√° uma an√°lise detalhada de cada cluster, interpretando as caracter√≠sticas principais e destacando seus pontos √∫nicos:
+Vamos analisar trÍs clusters de vinhos, cada um com caracterÌsticas ˙nicas:
 
-**Cluster 0: Vinhos Leves e Delicados**
+**Cluster 0: Vinhos Leves e Equilibrados**
 
-* **Caracter√≠sticas Principais:** Este grupo se destaca por n√≠veis mais baixos de √°lcool, cor menos intensa, taninos moderados (proantocianidinas) e fen√≥is totais. 
-* **Contexto e Simplifica√ß√£o:**  Esses vinhos provavelmente s√£o mais leves no corpo e na cor, com sabor menos intenso e adstringente. Imagine um Pinot Noir leve ou um vinho branco seco.
-* **Caracter√≠stica Marcante:**  A faixa de prolina, um amino√°cido, √© a menor entre os tr√™s clusters ([0.048, 0.287]), sugerindo um processo de produ√ß√£o distinto ou uvas cultivadas em condi√ß√µes espec√≠ficas.
-* **Compara√ß√£o:**  Em contraste com os outros clusters, a baixa prolina sugere um processo de produ√ß√£o diferente ou uvas de regi√µes mais frias.
+Estes vinhos se destacam por intensidade de cor e teor alcoÛlico mais baixos (0.067-0.266 e 0.156-0.445, respectivamente). Embora apresentem nÌveis moderados de  flavonÛides e compostos fenÛlicos totais, o que indica uma certa estrutura,  seu perfil sugere vinhos mais leves e f·ceis de beber. 
 
-**Cluster 1: Vinhos Encorpados e Intensos**
+**CaracterÌstica Marcante:**  A principal caracterÌstica distintiva deste grupo È a menor intensidade de cor, o que sugere vinhos com tons mais claros.
 
-* **Caracter√≠sticas Principais:**  Apresentam alto teor alco√≥lico, maior intensidade de cor e  n√≠veis elevados de n√£o flavon√≥ides fen√≥licos.
-* **Contexto e Simplifica√ß√£o:**  Podemos imaginar vinhos encorpados, com cores mais profundas, possivelmente tintos envelhecidos em carvalho, com sabores mais complexos e terrosos devido aos fen√≥is n√£o flavon√≥ides.
-* **Caracter√≠stica Marcante:**  A faixa mais alta de  "od280/od315_of_diluted_wines" ([0.022, 0.289]) - um indicador de  compostos fen√≥licos -  sugere vinhos com maior potencial de envelhecimento.
-* **Compara√ß√£o:**  Enquanto o Cluster 2 tamb√©m apresenta alta intensidade de cor, o Cluster 1 se diferencia pelo potencial de envelhecimento, indicado pela alta propor√ß√£o de od280/od315.
+**Cluster 1: Vinhos Encorpados e Complexos**
 
-**Cluster 2: Vinhos Arom√°ticos e Equilibrados**
+Este grupo se caracteriza por nÌveis elevados de ·lcool (0.359-0.718), acidez (m·lico: 0.136-0.778),  e minerais como magnÈsio (0.174-0.463) e cinzas (0.449-0.714).  Apresentam tambÈm alta concentraÁ„o de fenÛis n„o flavonoides (0.253-0.906).  Esses fatores combinados sugerem vinhos encorpados, com aromas complexos e potencial de envelhecimento.
 
-* **Caracter√≠sticas Principais:**  Este cluster se destaca pelos altos n√≠veis de flavon√≥ides, fen√≥is totais e √°lcool, al√©m de uma acidez (√°cido m√°lico) moderada.
-* **Contexto e Simplifica√ß√£o:**  Esses vinhos devem apresentar aromas complexos e frutados, bom corpo e taninos presentes, mas equilibrados pela acidez. Pense em um Cabernet Sauvignon encorpado ou um Syrah.
-* **Caracter√≠stica Marcante:**  N√£o possui uma caracter√≠stica que o diferencia completamente dos demais. 
-* **Compara√ß√£o:**  Embora compartilhe a caracter√≠stica de alta intensidade de cor com o Cluster 1, diferencia-se pelo equil√≠brio com a acidez e aromas mais frutados devido aos flavon√≥ides.
+**CaracterÌstica Marcante:** O destaque fica por conta do alto teor de  fenÛis n„o flavonoides, conferindo complexidade arom·tica e estrutura. 
 
-**Observa√ß√£o:**  A an√°lise acima √© uma interpreta√ß√£o geral. Detalhes espec√≠ficos sobre os vinhos e seus m√©todos de produ√ß√£o podem fornecer uma compreens√£o ainda mais profunda. 
+**Cluster 2: Vinhos Arom·ticos e Intensos**
+
+Este grupo apresenta alto teor de flavonoides (0.441-0.675), proantocianidinas (0.303-0.621) e  uma alta absorb‚ncia entre 280-315 nm (0.535-0.846). Estas caracterÌsticas indicam vinhos com cores intensas, aromas complexos e taninos marcantes. O teor alcoÛlico tambÈm È elevado (0.532-0.861), complementando a sensaÁ„o de corpo e intensidade.
+
+**CaracterÌstica Marcante:**  A alta concentraÁ„o de  proantocianidinas confere a estes vinhos taninos mais perceptÌveis, impactando a sensaÁ„o na boca.
+
+
+**ComparaÁ„o das CaracterÌsticas Marcantes:**
+
+* A intensidade da cor diferencia o Cluster 0 dos demais, sendo a mais clara. 
+* O Cluster 1 se destaca pela complexidade arom·tica conferida pelos fenÛis n„o flavonoides.
+* J· o Cluster 2 se diferencia pela presenÁa marcante de taninos, provenientes das proantocianidinas.
+
+
+**ObservaÁıes sobre as MÈtricas:**
+
+Todos os clusters apresentam baixo "coverage", indicando que a descriÁ„o n„o se aplica ‡ maioria dos pontos dentro do cluster. AlÈm disso, o "separation error" È zero em todos os clusters, o que significa que as descriÁıes s„o especÌficas para cada grupo. A concis„o È igual para todos, indicando um nÌvel de simplicidade similar nas descriÁıes. 
