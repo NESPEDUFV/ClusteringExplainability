@@ -8,10 +8,14 @@ from sklearn.cluster import KMeans
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from cluster_description.cldes import CLDES
 from api.promptGemini import PromptGemini as gemini
+
+def clear_terminal():
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 def load_and_preprocess_data_iris(dataset_loader):
     data = dataset_loader()
@@ -62,24 +66,29 @@ def format_cluster_descriptions(cluster_descriptions):
 
 def calculate_metrics_for_all_clusters(cldes, X, predicted, formatted_output):
     clusters = parse_formatted_output(formatted_output)
+    metrics_output = []
+
+    formatted_output += "\n\n"
     
-    for cluster, rules in clusters.items():
-        print(f"--- Métricas para o Cluster {cluster} ---")
+    for cluster, rule_str_list in clusters.items():
+        rules = [parse_rule(rule_str) for rule_str in rule_str_list]
         
-        for rule_str in rules:
-            rule = parse_rule(rule_str) 
-            
-            coverage = cldes.calculate_coverage(rule, X, predicted, cluster)
-            separation_error = cldes.calculate_separation_error(rule, X, predicted, cluster)
-            conciseness = cldes.calculate_conciseness(rule_str)
-            
-            print(f"Regra: {rule_str}")
-            print(f"Coverage: {coverage}")
-            print(f"Separation Error: {separation_error}")
-            print(f"Conciseness: {conciseness}")
-            print()
+        coverage = cldes.calculate_coverage(rules, X, predicted, cluster)
+        separation_error = cldes.calculate_separation_error(rules, X, predicted, cluster)
+        conciseness = cldes.calculate_conciseness(rule_str_list)
+        
+        metrics_output.append(f"Métricas para o Cluster {cluster}:\n"
+                              f"coverage: {coverage}\n"
+                              f"separation error: {separation_error}\n"
+                              f"conciseness: {conciseness}\n")
+    
+    formatted_output += "\n".join(metrics_output)
+    return formatted_output
 
 def parse_rule(rule_str):
+    """
+    Função para transformar uma string de regra em um predicado.
+    """
     parts = rule_str.strip('<>').split(", ", 2)
     
     if len(parts) == 3:
@@ -90,8 +99,11 @@ def parse_rule(rule_str):
         return lambda x: lower_bound <= x[attribute] <= upper_bound
     else:
         raise ValueError(f"Formato inesperado na regra: {rule_str}")
-
+    
 def parse_formatted_output(formatted_output):
+    """
+    Parseia a saída formatada, organizando as regras por cluster.
+    """
     clusters = {}
     current_cluster = None
     for line in formatted_output.splitlines():
@@ -111,11 +123,12 @@ async def main_workflow(dataset_loader):
     cluster_descriptions, columns_sorted = describe_clusters(X, predicted, cldes)
     formatted_output = format_cluster_descriptions(cluster_descriptions)
     
-    print(formatted_output)
+    formatted_output = calculate_metrics_for_all_clusters(cldes, X, predicted, formatted_output)
     
-    calculate_metrics_for_all_clusters(cldes, X, predicted, formatted_output)
-    #gemini_instance = gemini(formatted_output, columns_sorted)
-    #await gemini_instance.generate()
+    clear_terminal()
+    print(formatted_output)
+    gemini_instance = gemini(formatted_output, columns_sorted)
+    await gemini_instance.generate()
 
 asyncio.run(main_workflow(load_wine))
 
