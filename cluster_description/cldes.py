@@ -105,6 +105,8 @@ class CLDES:
         y_predicted = self.model.predict(x_test)
         e_original = accuracy_score(y_test, y_predicted)
         r_original = recall_score(y_test, y_predicted, average=None)
+        print("Original accuracy: ", e_original)
+        print("Original recall: ", r_original)
         self.logger.info("Initial model accuracy: %s", e_original)
         self.logger.info("Starting permutation")
         for j in np.unique(groups):
@@ -237,8 +239,8 @@ class CLDES:
         
         generalDescription = []
         for i, col in enumerate(columns_sorted):            
-            # if sorted_feat_im[i] == 0 or sorted_feat_im[i] < self.min_importance:
-            #     continue
+            if sorted_feat_im[i] == 0 or sorted_feat_im[i] < self.min_importance:
+                continue
 
             if col not in continuos_vars:
                 value_counts = data[col].value_counts()
@@ -254,8 +256,8 @@ class CLDES:
                     # print(description)
                 data_to_df[col] = value_counts.index[0]
             else:
-                lower = float(round(np.percentile(data[col], 10), 3))
-                upper = float(round(np.percentile(data[col], 90), 3))
+                lower = float(round(np.percentile(data[col], 1), 3))
+                upper = float(round(np.percentile(data[col], 99), 3))
                 
                 values = f"[{lower}, {upper}]"
                 data_to_df[col] = values
@@ -288,7 +290,7 @@ class CLDES:
         
         coverage = covered_in_cluster / total_in_cluster
 
-        return coverage
+        return round(coverage, 4)
 
 
     def calculate_separation_error(self, rules, X, predicted, cluster):
@@ -302,13 +304,15 @@ class CLDES:
 
         covered = np.all([X.apply(rule, axis=1) for rule in rules], axis=0)
 
+        print("\n\n")
+        print(covered)
         covered_outside_cluster = np.sum(covered & (predicted != cluster))
 
         total_covered = np.sum(covered) + covered_outside_cluster
 
         separation_error = covered_outside_cluster / total_covered if total_covered > 0 else 0
 
-        return separation_error
+        return round(separation_error, 4)
 
 
     def calculate_conciseness(self, rules):
@@ -318,4 +322,4 @@ class CLDES:
         """
         num_predicates = len(rules)
         conciseness = 1 / num_predicates if num_predicates > 0 else 0
-        return conciseness
+        return round(conciseness, 4)

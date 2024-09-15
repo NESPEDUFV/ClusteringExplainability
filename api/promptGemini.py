@@ -15,11 +15,11 @@ class PromptGemini:
         API_KEY = os.getenv("API_KEY")
         gemini.configure(api_key=API_KEY)
 
-        #for m in gemini.list_models():
-            #if 'generateContent' in m.supported_generation_methods:
-                #print(m.name)
+        # for m in gemini.list_models():
+        #     if 'generateContent' in m.supported_generation_methods:
+        #         print(m.name)
 
-        model = gemini.GenerativeModel("gemini-1.5-pro-latest")
+        model = gemini.GenerativeModel("gemini-1.5-flash-latest")
 
         prompt = """
         Você é um AI especialista em interpretar clusters de dados. Sua tarefa é transformar a descrição de clusters 
@@ -41,7 +41,7 @@ class PromptGemini:
         semantica = str(self.semantic)
         cluster = str(self.cluster)
 
-        #pergunta = semantica + cluster
+        pergunta = semantica + cluster
         pergunta = cluster
         
         print("\n")

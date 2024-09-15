@@ -118,17 +118,16 @@ async def main_workflow(dataset_loader):
     X, df = load_and_preprocess_data_wine(dataset_loader)
     kmeans, predicted = perform_clustering(X)
     
-    cldes = CLDES(0.01, 10, kmeans)
+    cldes = CLDES(0.01, 0, kmeans)
     
     cluster_descriptions, columns_sorted = describe_clusters(X, predicted, cldes)
     formatted_output = format_cluster_descriptions(cluster_descriptions)
     
     formatted_output = calculate_metrics_for_all_clusters(cldes, X, predicted, formatted_output)
     
-    clear_terminal()
     print(formatted_output)
-    gemini_instance = gemini(formatted_output, columns_sorted)
-    await gemini_instance.generate()
+    # gemini_instance = gemini(formatted_output, columns_sorted)
+    # await gemini_instance.generate()
 
 asyncio.run(main_workflow(load_wine))
 
