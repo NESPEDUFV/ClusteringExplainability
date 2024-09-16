@@ -6,11 +6,18 @@ from dotenv import load_dotenv
 import os
 
 class PromptGemini:
-    def __init__(self, cluster, semantic):
+    def __init__(self, cluster):
         self.cluster = cluster
-        self.semantic = semantic
+        self.semantic = ""
 
-    async def generate(self):
+    async def generate(self, isSemantic=False):
+        try:
+            file_content = self.read_txt_file('api\semantica_diabetes.txt')
+            self.semantic = file_content
+        except ValueError as e:
+            print(e)
+            return
+            
         load_dotenv()
         API_KEY = os.getenv("API_KEY")
         gemini.configure(api_key=API_KEY)
@@ -49,13 +56,23 @@ class PromptGemini:
         Neste exemplo, "80-between" significa que 80% dos dados do cluster estão dentro do intervalo especificado. Isso 
         indica que a maior parte dos pontos do cluster está contida entre os limites descritos, fornecendo uma ideia 
         sobre a distribuição dos dados em relação àquela característica.
+        Outro exemplo de entrada: "<sex, contains, 1.0>" (onde "contains" indica que a característica 'sexo' do paciente 
+        contém um valor específico, neste caso, 1.0)
+        **Observação:** Semânticas podem ser enviadas junto com os clusters e devem ser usadas para compreender 
+        o significado de cada característica, caso estejam presentes. Ela virá com o título "Semântica" e será seguida
+        de uma lista de características e seus significados. 
+        Exemplo: 
+        Semânticas
+        age: Idade do paciente.
         """
 
         semantica = str(self.semantic)
         cluster = str(self.cluster)
 
-        pergunta = semantica + cluster
-        pergunta = cluster
+        pergunta = semantica + "\n\n" + cluster
+        
+        print("\n\n")
+        print(pergunta)
         
         print("\n")
         print("Gerando descrição do cluster...")
@@ -90,3 +107,22 @@ class PromptGemini:
             file.write(response)
         
         print(f"Response saved to {filepath}")
+        
+    def read_txt_file(self, file_path):
+        """
+        Lê o conteúdo de um arquivo .txt e retorna como uma string.
+
+        :param file_path: Caminho para o arquivo .txt
+        :return: Conteúdo do arquivo como uma string
+        :raises ValueError: Se o arquivo não for encontrado ou ocorrer um erro ao ler o arquivo.
+        """
+        try:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                content = file.read()
+            return content
+        except FileNotFoundError:
+            raise ValueError(f"O arquivo '{file_path}' não foi encontrado.")
+        except Exception as e:
+            raise ValueError(f"Ocorreu um erro ao ler o arquivo: {str(e)}")
+
+

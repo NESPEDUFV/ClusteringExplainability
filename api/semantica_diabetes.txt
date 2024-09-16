@@ -1,0 +1,10 @@
+Semânticas
+age: Idade do paciente.
+sex: Sexo do paciente.
+bmi: Índice de Massa Corporal (Body Mass Index), que é uma medida da gordura corporal baseada na altura e peso.
+bp: Pressão arterial média (Blood Pressure).
+s1: Nível de colesterol total no sangue.
+s2: Nível de colesterol LDL (Low-Density Lipoprotein).
+s3: Nível de colesterol HDL (High-Density Lipoprotein).
+s4: Nível de triglicerídeos no sangue.
+s5: Nível de glicose no sangue.
