@@ -121,7 +121,7 @@ def parse_formatted_output(formatted_output):
     return clusters
 
 async def main_workflow(dataset_loader):
-    X, df = load_and_preprocess_data_iris(dataset_loader)
+    X, df = load_and_preprocess_data_wine(dataset_loader)
     predicted = perform_clustering(X)
     
     cldes = CLDES(0.01, 0)
@@ -132,8 +132,8 @@ async def main_workflow(dataset_loader):
     formatted_output = calculate_metrics_for_all_clusters(cldes, X, predicted, formatted_output)
     
     print(formatted_output)
-    gemini_instance = gemini(formatted_output, columns_sorted)
-    await gemini_instance.generate()
+    #gemini_instance = gemini(formatted_output, columns_sorted)
+    #await gemini_instance.generate()
 
-asyncio.run(main_workflow(load_iris))
+asyncio.run(main_workflow(load_wine))
 

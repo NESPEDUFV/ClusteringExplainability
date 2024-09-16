@@ -26,16 +26,29 @@ class PromptGemini:
         gerados por um algoritmo em narrativas claras e acessíveis para o público leigo. Cada cluster é definido por 
         um conjunto de características formais. Para gerar a descrição, siga os passos abaixo:
         1. Identifique as Características Principais: Extraia as características mais relevantes dos clusters fornecidos.
-        2. Contextualize e Simplifique: Explique o que essas características significam no contexto do grupo descrito. Detalhe as informações e use uma linguagem simples e direta para garantir que qualquer pessoa possa entender.
-        3. Características Marcantes: Destaque uma característica única que diferencia o cluster dos demais. Se não houver tal característica, informe que o cluster não possui uma característica marcante.
-        4. Comparação das Características Marcantes: Compare as características marcantes de cada cluster. Elabore sobre como essas características se diferenciam entre os clusters.
+        2. Contextualize e Simplifique: Explique o que essas características significam no contexto do grupo descrito. 
+        Detalhe as informações e use uma linguagem simples e direta para garantir que qualquer pessoa possa entender.
+        3. Características Marcantes: Destaque uma característica única que diferencia o cluster dos demais. Se não houver 
+        tal característica, informe que o cluster não possui uma característica marcante.
+        4. Comparação das Características Marcantes: Compare as características marcantes de cada cluster. Elabore sobre 
+        como essas características se diferenciam entre os clusters.
         5. Métricas do Cluster: Considere as seguintes métricas para cada cluster:
-            Coverage: Mede a proporção de pontos de dados que pertencem a um cluster específico e que são descritos pela explicação. Uma alta cobertura indica que a explicação é válida para a maioria dos pontos do cluster.
-            Separation Error: Mede a proporção de pontos que a explicação considera válidos, mas que na verdade pertencem a outros clusters. Um baixo erro de separação é desejável, pois indica que a explicação é específica para o cluster em questão e não se aplica a pontos de outros clusters.
-            Conciseness: Refere-se à simplicidade e brevidade da explicação. Uma explicação concisa é mais fácil de entender e interpretar. A concisão é medida pelo número de predicados que compõem a explicação; quanto menor o número de predicados, maior a concisão.
-        6. Avalie para cada cluster: Forneça uma avaliação qualitativa de cada cluster com base nas métricas fornecidas. Considere a eficácia da descrição, a clareza da explicação e a relevância das características destacadas.    
-        Formato de Saída: Apresente suas descrições em parágrafos claros, assegurando que sejam compreensíveis e informativas para um público leigo.
-        Exemplo de Entrada: "<característica, 80-between, intervalo>
+        - **Coverage**: Mede a proporção de pontos de dados que pertencem a um cluster específico e que são descritos pela 
+        explicação. Uma alta cobertura indica que a explicação é válida para a maioria dos pontos do cluster.
+        - **Separation Error**: Mede a proporção de pontos que a explicação considera válidos, mas que na verdade 
+        pertencem a outros clusters. Um baixo erro de separação é desejável, pois indica que a explicação é específica 
+        para o cluster em questão e não se aplica a pontos de outros clusters.
+        - **Conciseness**: Refere-se à simplicidade e brevidade da explicação. Uma explicação concisa é mais fácil de 
+        entender e interpretar. A concisão é medida pelo número de predicados que compõem a explicação; quanto menor 
+        o número de predicados, maior a concisão.
+        6. Avalie para cada cluster: Forneça uma avaliação qualitativa de cada cluster com base nas métricas fornecidas. 
+        Formato de Saída: Apresente suas descrições em parágrafos claros, assegurando que sejam compreensíveis e 
+        informativas para um público leigo.
+        **Exemplo de Entrada:**
+        "<característica, 80-between, intervalo>"
+        Neste exemplo, "80-between" significa que 80% dos dados do cluster estão dentro do intervalo especificado. Isso 
+        indica que a maior parte dos pontos do cluster está contida entre os limites descritos, fornecendo uma ideia 
+        sobre a distribuição dos dados em relação àquela característica.
         """
 
         semantica = str(self.semantic)
