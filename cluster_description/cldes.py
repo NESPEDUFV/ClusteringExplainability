@@ -6,6 +6,9 @@ import pandas as pd
 from sklearn import svm
 from sklearn.metrics import accuracy_score, recall_score
 from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
 
 import os
 import sys
@@ -24,7 +27,7 @@ class OutputType(enum.Enum):
 
 class CLDES:
 
-    def __init__(self, min_per = 0, min_importance = 0, model  = svm.SVC()) -> None:
+    def __init__(self, min_per = 0, min_importance = 0, model  = RandomForestClassifier(random_state=42)) -> None:
         self.min_importance = min_importance
         self._min_per = min_per
         self.model = model
@@ -304,8 +307,6 @@ class CLDES:
 
         covered = np.all([X.apply(rule, axis=1) for rule in rules], axis=0)
 
-        print("\n\n")
-        print(covered)
         covered_outside_cluster = np.sum(covered & (predicted != cluster))
 
         total_covered = np.sum(covered) + covered_outside_cluster

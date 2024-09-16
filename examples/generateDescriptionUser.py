@@ -7,6 +7,7 @@ from sklearn.datasets import load_iris, load_wine
 from sklearn.cluster import KMeans
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.cluster import DBSCAN
 
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -47,7 +48,12 @@ def load_and_preprocess_data_wine(dataset_loader):
 def perform_clustering(X, n_clusters=3):
     kmeans = KMeans(n_clusters=n_clusters, random_state=42).fit(X)
     predicted = kmeans.predict(X)
-    return kmeans, predicted
+    return predicted
+
+def perform_clustering_dbscan(X, eps=0.5, min_samples=5):
+    dbscan = DBSCAN(eps=eps, min_samples=min_samples).fit(X)
+    predicted = dbscan.labels_
+    return dbscan, predicted
 
 def describe_clusters(X, predicted, cldes):
     groups = [i for i in range(len(X.columns))]
@@ -115,10 +121,10 @@ def parse_formatted_output(formatted_output):
     return clusters
 
 async def main_workflow(dataset_loader):
-    X, df = load_and_preprocess_data_wine(dataset_loader)
-    kmeans, predicted = perform_clustering(X)
+    X, df = load_and_preprocess_data_iris(dataset_loader)
+    predicted = perform_clustering(X)
     
-    cldes = CLDES(0.01, 0, kmeans)
+    cldes = CLDES(0.01, 0)
     
     cluster_descriptions, columns_sorted = describe_clusters(X, predicted, cldes)
     formatted_output = format_cluster_descriptions(cluster_descriptions)
@@ -126,8 +132,8 @@ async def main_workflow(dataset_loader):
     formatted_output = calculate_metrics_for_all_clusters(cldes, X, predicted, formatted_output)
     
     print(formatted_output)
-    # gemini_instance = gemini(formatted_output, columns_sorted)
-    # await gemini_instance.generate()
+    gemini_instance = gemini(formatted_output, columns_sorted)
+    await gemini_instance.generate()
 
-asyncio.run(main_workflow(load_wine))
+asyncio.run(main_workflow(load_iris))
 

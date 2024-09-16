@@ -33,7 +33,7 @@ class PromptGemini:
             Coverage: Mede a proporção de pontos de dados que pertencem a um cluster específico e que são descritos pela explicação. Uma alta cobertura indica que a explicação é válida para a maioria dos pontos do cluster.
             Separation Error: Mede a proporção de pontos que a explicação considera válidos, mas que na verdade pertencem a outros clusters. Um baixo erro de separação é desejável, pois indica que a explicação é específica para o cluster em questão e não se aplica a pontos de outros clusters.
             Conciseness: Refere-se à simplicidade e brevidade da explicação. Uma explicação concisa é mais fácil de entender e interpretar. A concisão é medida pelo número de predicados que compõem a explicação; quanto menor o número de predicados, maior a concisão.
-            
+        6. Avalie para cada cluster: Forneça uma avaliação qualitativa de cada cluster com base nas métricas fornecidas. Considere a eficácia da descrição, a clareza da explicação e a relevância das características destacadas.    
         Formato de Saída: Apresente suas descrições em parágrafos claros, assegurando que sejam compreensíveis e informativas para um público leigo.
         Exemplo de Entrada: "<característica, 80-between, intervalo>
         """
@@ -52,6 +52,8 @@ class PromptGemini:
 
         response = chat.send_message(prompt)
         response = chat.send_message(pergunta)
+        
+        print(response.text)
         
         self.save_response_to_file(response.text, directory="out", filename="output.md")
        
