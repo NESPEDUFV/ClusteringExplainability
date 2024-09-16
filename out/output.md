@@ -1,35 +1,44 @@
-## Análise dos Clusters de Flores
+## Análise dos Clusters de Pacientes
 
-Vamos analisar os clusters de flores com base nas suas características de pétalas e sépalas. 
+Aqui estão as descrições dos clusters de pacientes, gerados a partir dos seus dados médicos, e uma análise de suas características marcantes:
 
-**Cluster 0: Flores Pequenas e Delicadas**
+**Cluster 0: Pacientes do Sexo Feminino**
 
-Este cluster agrupa flores com características menores, tanto em pétalas quanto em sépalas.  As pétalas, por exemplo, medem entre 0,585 e 0,983 cm de comprimento, enquanto a largura varia entre 0,542 e 1,0 cm. As sépalas também são pequenas, com comprimento entre 0,431 e 0,972 cm e largura entre 0,208 e 0,75 cm.  
+* **Característica Principal:** Este cluster é composto exclusivamente por pacientes do sexo feminino.
+* **Contextualização:** O cluster 0 representa um grupo de pacientes que compartilham o único traço em comum de serem mulheres.
+* **Característica Marcante:** O cluster 0 não possui uma característica marcante, pois é definido apenas pelo sexo. 
+* **Comparação:**  Ao contrário dos outros clusters, o Cluster 0 não apresenta nenhuma outra característica além do sexo, o que o torna o mais homogêneo.
+* **Avaliação:** 
+    * **Cobertura:**  A cobertura é baixa (0.0), indicando que esta explicação não é válida para nenhum dos pontos de dados. 
+    * **Erro de Separação:** O erro de separação é alto (0.5), significando que metade dos pontos que se encaixam na descrição do cluster na verdade pertencem a outros clusters.
+    * **Concisão:**  A explicação é extremamente concisa (1.0), mas, infelizmente, não representa um grupo válido de dados.
 
-**Característica Marcante:** A característica marcante deste cluster é o tamanho pequeno de suas flores, tanto em pétalas quanto em sépalas. Podemos dizer que este cluster agrupa flores pequenas e delicadas.
+**Cluster 1: Pacientes do Sexo Feminino com Níveis Elevados de Diversos Marcadores Biológicos**
 
-**Cluster 1: Flores com Pétalas Minúsculas**
+* **Característica Principal:** Este cluster é composto por pacientes do sexo feminino com níveis elevados de colesterol total, LDL, triglicerídeos, glicose, pressão arterial e IMC, além de uma idade um pouco mais avançada.
+* **Contextualização:** Este grupo de pacientes apresenta um perfil de risco para doenças cardíacas e metabólicas. 
+* **Característica Marcante:** A presença de valores elevados em diversos marcadores sanguíneos, como colesterol, triglicerídeos e glicose, diferencia este cluster dos outros.
+* **Comparação:** Em comparação com o Cluster 2, este cluster apresenta níveis mais elevados de diversos marcadores, incluindo colesterol e glicose, sugerindo um perfil de risco mais elevado. 
+* **Avaliação:**
+    * **Cobertura:** A cobertura é relativamente alta (0.8037), indicando que a explicação é válida para a maioria dos pontos do cluster.
+    * **Erro de Separação:** O erro de separação é moderado (0.2095), o que significa que uma pequena parcela dos pontos considerados válidos pela explicação pertencem a outros clusters.
+    * **Concisão:** A explicação é concisa (0.125), com um número relativamente baixo de predicados que a compõem.
 
-Este cluster é definido por flores com pétalas extremamente pequenas, medindo entre 0,008 e 0,153 cm de comprimento.  
+**Cluster 2: Pacientes do Sexo Feminino com Níveis Moderados de Marcadores Biológicos**
 
-**Característica Marcante:** A característica marcante deste cluster é o tamanho minúsculo das suas pétalas. São flores com pétalas quase imperceptíveis.
+* **Característica Principal:** Este cluster é composto por pacientes do sexo feminino com níveis moderados de colesterol total, LDL, triglicerídeos e glicose, pressão arterial e IMC, além de uma idade um pouco mais baixa.
+* **Contextualização:**  Este grupo de pacientes apresenta um perfil de risco moderado para doenças cardíacas e metabólicas.
+* **Característica Marcante:** A presença de valores moderados em diversos marcadores sanguíneos, como colesterol, triglicerídeos e glicose, diferencia este cluster do Cluster 1, que apresenta valores mais elevados.
+* **Comparação:** Este cluster se diferencia do Cluster 1 por apresentar níveis mais baixos de colesterol total, LDL, triglicerídeos e glicose.
+* **Avaliação:**
+    * **Cobertura:** A cobertura é alta (0.83), indicando que a explicação é válida para a maioria dos pontos do cluster.
+    * **Erro de Separação:** O erro de separação é moderado (0.1832), o que significa que uma pequena parcela dos pontos considerados válidos pela explicação pertencem a outros clusters.
+    * **Concisão:** A explicação é concisa (0.1111), com um número relativamente baixo de predicados que a compõem.
 
-**Cluster 2: Flores de Tamanho Médio**
+**Observações:**
 
-Este cluster é composto por flores de tamanho médio, com pétalas e sépalas de medidas intermediárias. As pétalas medem entre 0,363 e 0,74 cm de comprimento e entre 0,375 e 0,792 cm de largura. As sépalas, por sua vez, medem entre 0,167 e 0,639 cm de comprimento e entre 0,039 e 0,417 cm de largura.
+* É importante destacar que a análise acima foi feita considerando somente os dados fornecidos e as semânticas definidas. 
+* A análise de clusters é um processo complexo que depende de diversos fatores, como o algoritmo de clusterização utilizado e a qualidade dos dados. 
+* Para uma análise mais completa, seria necessário levar em consideração outras informações e realizar testes adicionais para confirmar a validade dos clusters.
 
-**Característica Marcante:**  Este cluster não possui uma característica marcante que o diferencie dos outros. As suas medidas são intermediárias,  sem um elemento distintivo.
-
-**Comparando os Clusters:**
-
-O Cluster 0 se destaca pelas flores pequenas, o Cluster 1 pelas pétalas minúsculas, enquanto o Cluster 2 apresenta medidas intermediárias. O Cluster 1 possui uma característica marcante que o diferencia dos demais, enquanto o Cluster 2 não possui um atributo único.
-
-**Avaliação:**
-
-* **Cluster 0:**  Cobertura alta (0.8846), erro de separação baixo (0.0893), concisão alta (0.25). A descrição é eficaz, clara e possui uma característica marcante bem definida.
-* **Cluster 1:** Cobertura alta (0.98), erro de separação baixo (0.0), concisão alta (1.0). A descrição é eficiente, concisa e precisa, com uma característica marcante clara. 
-* **Cluster 2:** Cobertura alta (0.8958), erro de separação médio (0.1356), concisão alta (0.25). A descrição é eficaz, porém a ausência de uma característica marcante torna a identificação do cluster um pouco mais complexa.
-
-**Conclusão:**
-
-Os clusters de flores foram bem definidos e separados com base em suas características de pétalas e sépalas. Os Clusters 0 e 1 possuem características marcantes que os distinguem, enquanto o Cluster 2 apresenta medidas intermediárias, sem um elemento distintivo.  
+Espero que esta descrição tenha sido útil para o público leigo. 
