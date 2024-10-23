@@ -1,8 +1,8 @@
 # %pip install -q -U google-generativeai
 # %pip install python-dotenv
 
-import google.generativeai as gemini
-from dotenv import load_dotenv
+#import google.generativeai as gemini
+#from dotenv import load_dotenv
 import os
 
 class PromptGemini:
@@ -18,15 +18,15 @@ class PromptGemini:
             print(e)
             return
             
-        load_dotenv()
-        API_KEY = os.getenv("API_KEY")
-        gemini.configure(api_key=API_KEY)
+        #load_dotenv()
+        #API_KEY = os.getenv("API_KEY")
+        #gemini.configure(api_key=API_KEY)
 
         # for m in gemini.list_models():
         #     if 'generateContent' in m.supported_generation_methods:
         #         print(m.name)
 
-        model = gemini.GenerativeModel("gemini-1.5-flash-latest")
+        #model = gemini.GenerativeModel("gemini-1.5-flash-latest")
 
         prompt = """
         Você é um AI especialista em interpretar clusters de dados. Sua tarefa é transformar a descrição de clusters 
@@ -78,14 +78,14 @@ class PromptGemini:
         print("Gerando descrição do cluster...")
         print("\n")
 
-        chat = model.start_chat(history=[])
+        #chat = model.start_chat(history=[])
 
-        response = chat.send_message(prompt)
-        response = chat.send_message(pergunta)
+        #response = chat.send_message(prompt)
+        #response = chat.send_message(pergunta)
         
-        print(response.text)
+        #print(response.text)
         
-        self.save_response_to_file(response.text, directory="out", filename="output.md")
+        #self.save_response_to_file(response.text, directory="out", filename="output.md")
        
     @staticmethod 
     def format_cluster_descriptions(cluster_descriptions):
