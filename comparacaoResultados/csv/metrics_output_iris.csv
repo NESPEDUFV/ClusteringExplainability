@@ -1,0 +1,16 @@
+Algoritmo,Dataset,Cluster,Coverage,Separation Error,Conciseness
+SVC,Iris,0,0.8846,0.0893,0.25
+SVC,Iris,1,0.96,0.0,0.5
+SVC,Iris,2,0.8958,0.1356,0.25
+RandomForestClassifier,Iris,0,0.8846,0.0893,0.25
+RandomForestClassifier,Iris,1,0.98,0.0,1.0
+RandomForestClassifier,Iris,2,0.8958,0.1356,0.25
+LogisticRegression,Iris,0,0.8846,0.0893,0.25
+LogisticRegression,Iris,1,0.96,0.0,0.5
+LogisticRegression,Iris,2,0.9792,0.2099,0.5
+KNeighborsClassifier,Iris,0,0.8846,0.1167,0.3333
+KNeighborsClassifier,Iris,1,0.96,0.0,0.5
+KNeighborsClassifier,Iris,2,0.8958,0.1356,0.25
+DecisionTreeClassifier,Iris,0,0.8846,0.0893,0.25
+DecisionTreeClassifier,Iris,1,0.98,0.0,1.0
+DecisionTreeClassifier,Iris,2,0.8958,0.1356,0.25

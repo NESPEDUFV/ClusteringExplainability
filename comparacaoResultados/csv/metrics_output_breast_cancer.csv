@@ -1,0 +1,16 @@
+Algoritmo,Dataset,Cluster,Coverage,Separation Error,Conciseness
+SVC,Breast Cancer,0,0.6964,0.0357,0.0556
+SVC,Breast Cancer,1,0.9669,0.0625,0.5
+SVC,Breast Cancer,2,0.7684,0.0899,0.0417
+RandomForestClassifier,Breast Cancer,0,1.0,0.9978,0
+RandomForestClassifier,Breast Cancer,1,1.0,0.9952,0
+RandomForestClassifier,Breast Cancer,2,0.9789,0.3786,1.0
+LogisticRegression,Breast Cancer,0,0.8393,0.0392,0.0909
+LogisticRegression,Breast Cancer,1,1.0,0.9952,0
+LogisticRegression,Breast Cancer,2,0.8526,0.2965,0.1
+KNeighborsClassifier,Breast Cancer,0,0.7054,0.0353,0.05
+KNeighborsClassifier,Breast Cancer,1,0.9669,0.0892,0.5
+KNeighborsClassifier,Breast Cancer,2,1.0,0.9979,0
+DecisionTreeClassifier,Breast Cancer,0,0.8839,0.0541,0.25
+DecisionTreeClassifier,Breast Cancer,1,0.9199,0.0229,0.2
+DecisionTreeClassifier,Breast Cancer,2,0.8947,0.16,0.2

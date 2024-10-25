@@ -1,0 +1,16 @@
+Algoritmo,Dataset,Cluster,Coverage,Separation Error,Conciseness
+SVC,Wine,0,0.9032,0.3133,0.3333
+SVC,Wine,1,0.6727,0.0,0.0769
+SVC,Wine,2,0.918,0.0172,0.3333
+RandomForestClassifier,Wine,0,0.9355,0.3092,0.5
+RandomForestClassifier,Wine,1,0.9273,0.0678,0.5
+RandomForestClassifier,Wine,2,0.9344,0.1299,0.5
+LogisticRegression,Wine,0,0.8871,0.2105,0.25
+LogisticRegression,Wine,1,0.7273,0.0,0.1111
+LogisticRegression,Wine,2,0.9016,0.1333,0.3333
+KNeighborsClassifier,Wine,0,0.7903,0.0702,0.1
+KNeighborsClassifier,Wine,1,0.8364,0.0577,0.3333
+KNeighborsClassifier,Wine,2,0.918,0.0882,0.3333
+DecisionTreeClassifier,Wine,0,0.9194,0.1299,0.3333
+DecisionTreeClassifier,Wine,1,0.9273,0.0952,0.5
+DecisionTreeClassifier,Wine,2,0.9344,0.0476,0.5

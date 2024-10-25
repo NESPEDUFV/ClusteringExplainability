@@ -1,0 +1,16 @@
+Algoritmo,Dataset,Cluster,Coverage,Separation Error,Conciseness
+SVC,Digits,0,1.0,0.3915,0.2
+SVC,Digits,1,0.9862,0.3027,0.1429
+SVC,Digits,2,0.0,0,0.0435
+RandomForestClassifier,Digits,0,0.9938,0.35,1.0
+RandomForestClassifier,Digits,1,0.9908,0.3478,1.0
+RandomForestClassifier,Digits,2,0.0,0,0.04
+LogisticRegression,Digits,0,0.9672,0.3434,0.0476
+LogisticRegression,Digits,1,0.9862,0.3027,0.125
+LogisticRegression,Digits,2,0.0,0,0.04
+KNeighborsClassifier,Digits,0,1.0,0.9991,0
+KNeighborsClassifier,Digits,1,1.0,0.9991,0
+KNeighborsClassifier,Digits,2,1.0,0.4186,0.25
+DecisionTreeClassifier,Digits,0,0.9828,0.349,0.1
+DecisionTreeClassifier,Digits,1,0.0,0,0.0625
+DecisionTreeClassifier,Digits,2,0.0,0,0.0385

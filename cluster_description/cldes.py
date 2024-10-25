@@ -270,31 +270,34 @@ class CLDES:
                 generalDescription.append(description)
         return generalDescription, columns_sorted  
     
+    def apply_rules(self, row, rules):
+        if not rules:
+            return False
+        
+        results = []
+        for rule in rules:
+            try:
+                result = rule(row)
+                results.append(result)
+            except Exception as e:
+                print(f"Error applying rule: {rule}. Error: {e}")
+
+        return all(results)
+    
     def calculate_coverage(self, rules, X, predicted, cluster):
-        """
-        Calcula a cobertura de um conjunto de regras para um cluster.
-        rules: lista de funções (cada função avalia um predicado da explicação do cluster)
-        X: dataset original (DataFrame)
-        predicted: rótulos previstos pelo algoritmo de clustering
-        cluster: o cluster específico para o qual a cobertura está sendo calculada
-        """
-        
         cluster_points = X[predicted == cluster]
-        
         total_in_cluster = len(cluster_points)
-        
+
         if total_in_cluster == 0:
-            return 0 
+            return 0
         
-        def apply_rules(row):
-            return all(rule(row) for rule in rules)
-        
-        covered_in_cluster = np.sum(cluster_points.apply(apply_rules, axis=1))
-        
+        covered_in_cluster = 0
+        for index, row in cluster_points.iterrows():
+            if self.apply_rules(row, rules): 
+                covered_in_cluster += 1
+
         coverage = covered_in_cluster / total_in_cluster
-
         return round(coverage, 4)
-
 
     def calculate_separation_error(self, rules, X, predicted, cluster):
         """
@@ -305,12 +308,15 @@ class CLDES:
         cluster: o cluster específico para o qual o erro está sendo calculado
         """
 
+        if not rules:
+            return 0  
+    
         covered = np.all([X.apply(rule, axis=1) for rule in rules], axis=0)
-
+        
         covered_outside_cluster = np.sum(covered & (predicted != cluster))
-
-        total_covered = np.sum(covered) + covered_outside_cluster
-
+        
+        total_covered = np.sum(covered)
+        
         separation_error = covered_outside_cluster / total_covered if total_covered > 0 else 0
 
         return round(separation_error, 4)
@@ -321,6 +327,7 @@ class CLDES:
         Calcula a concisão de uma regra com base no número de predicados.
         rules: lista de predicados que definem o cluster (cada predicado é uma regra).
         """
+        
         num_predicates = len(rules)
         conciseness = 1 / num_predicates if num_predicates > 0 else 0
         return round(conciseness, 4)

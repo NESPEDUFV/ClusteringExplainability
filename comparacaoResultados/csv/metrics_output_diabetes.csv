@@ -1,0 +1,16 @@
+Algoritmo,Dataset,Cluster,Coverage,Separation Error,Conciseness
+SVC,Diabetes,0,0.0,0.5,1.0
+SVC,Diabetes,1,0.785,0.2,0.1
+SVC,Diabetes,2,0.86,0.1791,0.125
+RandomForestClassifier,Diabetes,0,0.0,0.5,1.0
+RandomForestClassifier,Diabetes,1,0.8037,0.2095,0.125
+RandomForestClassifier,Diabetes,2,0.9,0.2256,0.1667
+LogisticRegression,Diabetes,0,0.0,0.5,1.0
+LogisticRegression,Diabetes,1,0.785,0.2,0.1
+LogisticRegression,Diabetes,2,0.86,0.1791,0.125
+KNeighborsClassifier,Diabetes,0,0.0,0.5,1.0
+KNeighborsClassifier,Diabetes,1,0.785,0.2,0.1
+KNeighborsClassifier,Diabetes,2,0.86,0.1791,0.125
+DecisionTreeClassifier,Diabetes,0,0.0,0.5,1.0
+DecisionTreeClassifier,Diabetes,1,0.9065,0.232,0.25
+DecisionTreeClassifier,Diabetes,2,0.94,0.2626,0.3333

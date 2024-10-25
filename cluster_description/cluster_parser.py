@@ -6,12 +6,12 @@ from sklearn.preprocessing import MinMaxScaler
 import numpy as np
 import pandas as pd
 from sklearn.svm import SVC
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
+import csv
 
 from cluster_description.cldes import CLDES
 
@@ -21,7 +21,6 @@ from api.promptGemini import PromptGemini as gemini
 
 class ClusterParser:
     def __init__(self, df, model, n_clusters=3):
-        #self.dataset_loader = dataset_loader
         self.n_clusters = n_clusters
         self.cldes = CLDES(0, 0.01, model)
         self.X = df
@@ -82,7 +81,7 @@ class ClusterParser:
 
     def calculate_metrics_for_all_clusters(self):
         clusters = self.parse_formatted_output(self.formatted_output)
-        metrics_output = []
+        metrics_output = {}
 
         for cluster, rule_str_list in clusters.items():
             rules = [self.parse_rule(rule_str) for rule_str in rule_str_list]
@@ -91,19 +90,29 @@ class ClusterParser:
             separation_error = self.cldes.calculate_separation_error(rules, self.X, self.predicted, cluster)
             conciseness = self.cldes.calculate_conciseness(rule_str_list)
             
-            metrics_output.append(f"Métricas para o Cluster {cluster}:\n"
-                                  f"coverage: {coverage}\n"
-                                  f"separation error: {separation_error}\n"
-                                  f"conciseness: {conciseness}\n")
-        
-            self.metrics = "\n".join(metrics_output).strip()
-        return
+            metrics_output[cluster] = {
+                "coverage": coverage,
+                "separation_error": separation_error,
+                "conciseness": conciseness
+            }
+
+        self.metrics = metrics_output
+        return self.metrics
+
     
     def format_clusters_and_metrics(self) -> None:
         self.formatted_output += "\n\n"
-        self.formatted_output += self.metrics
-        return
         
+        for cluster, metrics in self.metrics.items():
+            self.formatted_output += (
+                f"Métricas para o Cluster {cluster}:\n"
+                f"coverage: {metrics['coverage']:.4f}\n"
+                f"separation error: {metrics['separation_error']:.4f}\n"
+                f"conciseness: {metrics['conciseness']:.4f}\n\n"
+            )
+        
+        self.formatted_output = self.formatted_output.strip()
+        return
 
     def parse_rule(self, rule_str):
         """
@@ -114,12 +123,14 @@ class ClusterParser:
         if len(parts) == 3:
             attribute, rule_type, values_str = parts
             if rule_type == "contains":
-                value = eval(values_str)
+                value = eval(values_str) 
                 return lambda x: x[attribute] == value
-            else:
+            elif rule_type == "80-between": 
                 values = eval(values_str)
                 lower_bound, upper_bound = values
                 return lambda x: lower_bound <= x[attribute] <= upper_bound
+            else:
+                raise ValueError(f"Tipo de regra não reconhecido: {rule_type}")
         else:
             raise ValueError(f"Formato inesperado na regra: {rule_str}")
 
@@ -136,10 +147,8 @@ class ClusterParser:
             elif line:
                 clusters[current_cluster].append(line.strip('<>'))
         return clusters
-    
-    import os
 
-    def save_results(algorithm_name, dataset_name, formatted_metrics, filename="results.txt"):
+    def save_results(algorithm_name, dataset_name, formatted_metrics, filename="results1.txt"):
         file_exists = os.path.isfile(filename)
 
         with open(filename, 'a') as file:
@@ -148,7 +157,29 @@ class ClusterParser:
 
             file.write(f"{algorithm_name}, {dataset_name}, {formatted_metrics}\n")
             file.write("\n")
+            
+    def save_results_csv(dataset_name, all_metrics, folder="comparacaoResultados/csv", filename="metrics_output.csv"):
 
+        os.makedirs(folder, exist_ok=True)
+        
+        filepath = os.path.join(folder, filename)
+        
+        with open(filepath, mode='w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(["Algoritmo", "Dataset", "Cluster", "Coverage", "Separation Error", "Conciseness"])
+            
+            for algorithm, clusters_metrics in all_metrics.items():
+                for cluster, metrics in clusters_metrics.items():
+                    writer.writerow([
+                        algorithm,
+                        dataset_name,
+                        cluster,
+                        metrics['coverage'],
+                        metrics['separation_error'],
+                        metrics['conciseness']
+                    ])
+
+        print(f"Arquivo salvo com sucesso em: {filepath}")
 
     def process_dataset(self):
         self.perform_clustering()
