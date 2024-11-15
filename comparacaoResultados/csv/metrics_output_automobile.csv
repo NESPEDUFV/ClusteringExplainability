@@ -1,0 +1,16 @@
+Algoritmo,Dataset,Cluster,Coverage,Separation Error,Conciseness
+SVC,automobile,0,0.9669,0.0,1.0
+SVC,automobile,1,0.9706,0.0,1.0
+SVC,automobile,2,0.875,0.0,0.5
+RandomForestClassifier,automobile,0,0.9669,0.0,1.0
+RandomForestClassifier,automobile,1,0.9412,0.0,0.3333
+RandomForestClassifier,automobile,2,0.0,0,0.0357
+LogisticRegression,automobile,0,0.9339,0.0,0.3333
+LogisticRegression,automobile,1,0.9265,0.0,0.3333
+LogisticRegression,automobile,2,0.875,0.0,0.5
+KNeighborsClassifier,automobile,0,0.9669,0.0,1.0
+KNeighborsClassifier,automobile,1,0.9706,0.0,1.0
+KNeighborsClassifier,automobile,2,0.875,0.0,1.0
+DecisionTreeClassifier,automobile,0,0.9669,0.0,1.0
+DecisionTreeClassifier,automobile,1,0.9706,0.0,1.0
+DecisionTreeClassifier,automobile,2,0.875,0.0,1.0

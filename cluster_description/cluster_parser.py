@@ -73,6 +73,7 @@ class ClusterParser:
             descriptionUser, columns_sorted = self.cldes.get_cluster_description(data=self.X, labels=self.predicted, cluster=cluster, output_type="description")
             self.cluster_descriptions.append(descriptionUser)
             
+        print(self.cluster_descriptions)
         return self.cluster_descriptions
 
     def format_cluster_descriptions(self):

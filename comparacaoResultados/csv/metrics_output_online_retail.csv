@@ -1,0 +1,16 @@
+Algoritmo,Dataset,Cluster,Coverage,Separation Error,Conciseness
+SVC,online_retail,0,0.9778,0.0,1.0
+SVC,online_retail,1,0.9795,0.0,1.0
+SVC,online_retail,2,0.9794,0.0,1.0
+RandomForestClassifier,online_retail,0,0.9778,0.0,1.0
+RandomForestClassifier,online_retail,1,0.9795,0.0,1.0
+RandomForestClassifier,online_retail,2,0.9794,0.0,1.0
+LogisticRegression,online_retail,0,0.9778,0.0,1.0
+LogisticRegression,online_retail,1,0.9795,0.0,1.0
+LogisticRegression,online_retail,2,0.9794,0.0,1.0
+KNeighborsClassifier,online_retail,0,0.9778,0.0,1.0
+KNeighborsClassifier,online_retail,1,0.9795,0.0,1.0
+KNeighborsClassifier,online_retail,2,0.9794,0.0,1.0
+DecisionTreeClassifier,online_retail,0,0.9778,0.0,1.0
+DecisionTreeClassifier,online_retail,1,0.9795,0.0,1.0
+DecisionTreeClassifier,online_retail,2,0.9794,0.0,1.0

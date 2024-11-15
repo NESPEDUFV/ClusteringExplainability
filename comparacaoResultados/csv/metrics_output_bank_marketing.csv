@@ -1,0 +1,16 @@
+Algoritmo,Dataset,Cluster,Coverage,Separation Error,Conciseness
+SVC,bank_marketing,0,0.0,0,0.5
+SVC,bank_marketing,1,0.0,0,0.3333
+SVC,bank_marketing,2,0.0,0,0.25
+RandomForestClassifier,bank_marketing,0,0.0,0,0.3333
+RandomForestClassifier,bank_marketing,1,0.0,0,0.3333
+RandomForestClassifier,bank_marketing,2,0.0,0,0.25
+LogisticRegression,bank_marketing,0,0.0,0,0.3333
+LogisticRegression,bank_marketing,1,0.0,0,0.3333
+LogisticRegression,bank_marketing,2,0.0,0,0.25
+KNeighborsClassifier,bank_marketing,0,0.0,0,0.3333
+KNeighborsClassifier,bank_marketing,1,0.0,0,0.1429
+KNeighborsClassifier,bank_marketing,2,0.0,0,0.125
+DecisionTreeClassifier,bank_marketing,0,0.0,0,0.25
+DecisionTreeClassifier,bank_marketing,1,0.0,1.0,0.5
+DecisionTreeClassifier,bank_marketing,2,0.0,0,0.3333

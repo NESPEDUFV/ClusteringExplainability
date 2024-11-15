@@ -1,0 +1,16 @@
+Algoritmo,Dataset,Cluster,Coverage,Separation Error,Conciseness
+SVC,air_quality,0,0.9198,0.0934,0.1667
+SVC,air_quality,1,1.0,0.0,1.0
+SVC,air_quality,2,0.9138,0.0407,0.1667
+RandomForestClassifier,air_quality,0,0.9379,0.1013,0.2
+RandomForestClassifier,air_quality,1,0.0,0,0
+RandomForestClassifier,air_quality,2,0.9797,0.1577,1.0
+LogisticRegression,air_quality,0,0.896,0.1155,0.1111
+LogisticRegression,air_quality,1,1.0,0.0,0.125
+LogisticRegression,air_quality,2,0.8985,0.0518,0.125
+KNeighborsClassifier,air_quality,0,0.9198,0.0934,0.1667
+KNeighborsClassifier,air_quality,1,1.0,0.0,0.5
+KNeighborsClassifier,air_quality,2,0.9138,0.0407,0.1667
+DecisionTreeClassifier,air_quality,0,0.9014,0.0905,0.125
+DecisionTreeClassifier,air_quality,1,1.0,0.0,0.5
+DecisionTreeClassifier,air_quality,2,0.936,0.0573,0.2

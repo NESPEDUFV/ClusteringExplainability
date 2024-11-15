@@ -1,0 +1,16 @@
+Algoritmo,Dataset,Cluster,Coverage,Separation Error,Conciseness
+SVC,heart_disease,0,0.0,0,0.0556
+SVC,heart_disease,1,0.0,0,0.0588
+SVC,heart_disease,2,0.0,0,0.0357
+RandomForestClassifier,heart_disease,0,0.0,0,0.0476
+RandomForestClassifier,heart_disease,1,0.0,0,0.0588
+RandomForestClassifier,heart_disease,2,0.0,0,0.0556
+LogisticRegression,heart_disease,0,0.0,0,0.0385
+LogisticRegression,heart_disease,1,0.0,0,0.0769
+LogisticRegression,heart_disease,2,0.0,0,0.0435
+KNeighborsClassifier,heart_disease,0,0.0,0,0.0556
+KNeighborsClassifier,heart_disease,1,0.0,0,0.0476
+KNeighborsClassifier,heart_disease,2,0.0,0,0.0345
+DecisionTreeClassifier,heart_disease,0,0.0,0,0.0345
+DecisionTreeClassifier,heart_disease,1,0.0,0,0.0588
+DecisionTreeClassifier,heart_disease,2,0.0,0,0.0556

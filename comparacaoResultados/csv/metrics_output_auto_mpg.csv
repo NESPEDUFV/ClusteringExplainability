@@ -1,0 +1,16 @@
+Algoritmo,Dataset,Cluster,Coverage,Separation Error,Conciseness
+SVC,auto_mpg,0,0.0,0,0.0556
+SVC,auto_mpg,1,0.0,0,0.0556
+SVC,auto_mpg,2,0.0,0,0.0667
+RandomForestClassifier,auto_mpg,0,0.0,0,0.0455
+RandomForestClassifier,auto_mpg,1,0.0,0,0.0556
+RandomForestClassifier,auto_mpg,2,0.0,0,0.0556
+LogisticRegression,auto_mpg,0,0.0,0,0.0455
+LogisticRegression,auto_mpg,1,0.0,0,0.0526
+LogisticRegression,auto_mpg,2,0.0,0,0.0526
+KNeighborsClassifier,auto_mpg,0,0.0,0,0.0556
+KNeighborsClassifier,auto_mpg,1,0.0,0,0.0556
+KNeighborsClassifier,auto_mpg,2,0.0,0,0.0667
+DecisionTreeClassifier,auto_mpg,0,0.0,0,0.0556
+DecisionTreeClassifier,auto_mpg,1,0.0,0,0.0556
+DecisionTreeClassifier,auto_mpg,2,0.0,0,0.0667

@@ -1,0 +1,16 @@
+Algoritmo,Dataset,Cluster,Coverage,Separation Error,Conciseness
+SVC,default_of_credit_card_clients,0,0.0,0,0.0125
+SVC,default_of_credit_card_clients,1,0.0,0,0.0111
+SVC,default_of_credit_card_clients,2,0.0,0,0.0135
+RandomForestClassifier,default_of_credit_card_clients,0,0.0,0,0.0125
+RandomForestClassifier,default_of_credit_card_clients,1,0.0,0,0.0111
+RandomForestClassifier,default_of_credit_card_clients,2,0.0,0,0.0135
+LogisticRegression,default_of_credit_card_clients,0,0.9119,0.6646,0.0909
+LogisticRegression,default_of_credit_card_clients,1,0.0,0,0
+LogisticRegression,default_of_credit_card_clients,2,0.0,0,0.0135
+KNeighborsClassifier,default_of_credit_card_clients,0,0.0,0,0.0125
+KNeighborsClassifier,default_of_credit_card_clients,1,0.0,0,0.0111
+KNeighborsClassifier,default_of_credit_card_clients,2,0.0,0,0.0135
+DecisionTreeClassifier,default_of_credit_card_clients,0,0.0,0,0.0125
+DecisionTreeClassifier,default_of_credit_card_clients,1,0.0,0,0.0111
+DecisionTreeClassifier,default_of_credit_card_clients,2,0.0,0,0.0135

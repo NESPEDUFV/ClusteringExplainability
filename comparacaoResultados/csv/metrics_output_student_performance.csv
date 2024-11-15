@@ -1,0 +1,16 @@
+Algoritmo,Dataset,Cluster,Coverage,Separation Error,Conciseness
+SVC,student_performance,0,0.0,0,0.0556
+SVC,student_performance,1,0.0,0,0.25
+SVC,student_performance,2,0.0,0,0.1667
+RandomForestClassifier,student_performance,0,0.0,0,0.1
+RandomForestClassifier,student_performance,1,0.0,0,0.1
+RandomForestClassifier,student_performance,2,0.0,0,0.0588
+LogisticRegression,student_performance,0,0.0,0,0.1
+LogisticRegression,student_performance,1,0.0,0,0.0118
+LogisticRegression,student_performance,2,0.0,0,0.1
+KNeighborsClassifier,student_performance,0,0.0,0,0.0204
+KNeighborsClassifier,student_performance,1,0.0,0,0.0227
+KNeighborsClassifier,student_performance,2,0.0,0,0.0769
+DecisionTreeClassifier,student_performance,0,0.0,0,0.0769
+DecisionTreeClassifier,student_performance,1,0.0,0,0.125
+DecisionTreeClassifier,student_performance,2,0.0,0,0.3333

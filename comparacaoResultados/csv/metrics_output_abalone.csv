@@ -1,0 +1,16 @@
+Algoritmo,Dataset,Cluster,Coverage,Separation Error,Conciseness
+SVC,abalone,0,0.0,0,0.3333
+SVC,abalone,1,0.0,0,0.5
+SVC,abalone,2,0.0,1.0,1.0
+RandomForestClassifier,abalone,0,0.0,0,0.3333
+RandomForestClassifier,abalone,1,1.0,0.0,1.0
+RandomForestClassifier,abalone,2,0.0,0,0.2
+LogisticRegression,abalone,0,0.0,0,0.3333
+LogisticRegression,abalone,1,0.0,0,0.3333
+LogisticRegression,abalone,2,0.0,0,0.2
+KNeighborsClassifier,abalone,0,0.0,0,0.3333
+KNeighborsClassifier,abalone,1,0.0,0,0.3333
+KNeighborsClassifier,abalone,2,0.0,0,0.2
+DecisionTreeClassifier,abalone,0,0.0,0,0.3333
+DecisionTreeClassifier,abalone,1,1.0,0.0,1.0
+DecisionTreeClassifier,abalone,2,0.0,0,0.3333

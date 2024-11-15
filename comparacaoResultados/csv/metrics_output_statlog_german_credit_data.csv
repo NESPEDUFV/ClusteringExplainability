@@ -1,0 +1,16 @@
+Algoritmo,Dataset,Cluster,Coverage,Separation Error,Conciseness
+SVC,statlog_german_credit_data,0,0.9643,0.0,1.0
+SVC,statlog_german_credit_data,1,0.978,0.0,1.0
+SVC,statlog_german_credit_data,2,0.9722,0.0,1.0
+RandomForestClassifier,statlog_german_credit_data,0,0.0,0,0.0714
+RandomForestClassifier,statlog_german_credit_data,1,0.978,0.0,1.0
+RandomForestClassifier,statlog_german_credit_data,2,0.9537,0.0,0.5
+LogisticRegression,statlog_german_credit_data,0,0.0,0,0.0556
+LogisticRegression,statlog_german_credit_data,1,0.978,0.0,1.0
+LogisticRegression,statlog_german_credit_data,2,0.0,0,0.1111
+KNeighborsClassifier,statlog_german_credit_data,0,0.9643,0.0,1.0
+KNeighborsClassifier,statlog_german_credit_data,1,0.978,0.0,1.0
+KNeighborsClassifier,statlog_german_credit_data,2,0.9722,0.0,1.0
+DecisionTreeClassifier,statlog_german_credit_data,0,0.9643,0.0,1.0
+DecisionTreeClassifier,statlog_german_credit_data,1,0.978,0.0,1.0
+DecisionTreeClassifier,statlog_german_credit_data,2,0.9722,0.0,1.0
