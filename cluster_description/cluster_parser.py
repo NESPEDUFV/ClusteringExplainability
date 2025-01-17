@@ -22,7 +22,7 @@ from api.promptGemini import PromptGemini as gemini
 class ClusterParser:
     def __init__(self, df, model, n_clusters=3):
         self.n_clusters = n_clusters
-        self.cldes = CLDES(0, 0.01, model)
+        self.cldes = CLDES(0, 0.1, model)
         self.X = df
         self.df = None
         self.predicted = None
@@ -185,7 +185,8 @@ class ClusterParser:
     def process_dataset(self):
         self.perform_clustering()
         self.describe_clusters()
-        self.format_cluster_descriptions()
-        self.calculate_metrics_for_all_clusters()
-        self.format_clusters_and_metrics()
+        # self.format_cluster_descriptions()
+        # self.calculate_metrics_for_all_clusters()
+        # self.format_clusters_and_metrics()
+        # print(self.formatted_output)
         return self.formatted_output, self.metrics

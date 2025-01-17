@@ -26,24 +26,20 @@ def clear_terminal():
         os.system('cls' if os.name == 'nt' else 'clear')
 
 def load_and_preprocess_data():
-    # Carregar o dataset automobile
-    automobile = fetch_ucirepo(id=275)
+    automobile = fetch_ucirepo(id=320)
     
     X = pd.DataFrame(automobile.data.features, columns=automobile.data.feature_names)
     y = automobile.data.targets
 
-    # Identificar colunas categóricas e numéricas
     categorical_cols = X.select_dtypes(include=['object']).columns
     numerical_cols = X.select_dtypes(include=['float64', 'int64']).columns
 
-    # Processar colunas numéricas
     if not numerical_cols.empty:
         num_imputer = SimpleImputer(strategy='mean')
         X_num = pd.DataFrame(num_imputer.fit_transform(X[numerical_cols]), columns=numerical_cols)
     else:
-        X_num = pd.DataFrame()  # Não há colunas numéricas
+        X_num = pd.DataFrame()
 
-    # Processar colunas categóricas
     if not categorical_cols.empty:
         cat_imputer = SimpleImputer(strategy='most_frequent')
         X_cat = pd.DataFrame(cat_imputer.fit_transform(X[categorical_cols]), columns=categorical_cols)
@@ -51,9 +47,8 @@ def load_and_preprocess_data():
         encoder = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
         X_cat_encoded = pd.DataFrame(encoder.fit_transform(X_cat), columns=encoder.get_feature_names_out(categorical_cols))
     else:
-        X_cat_encoded = pd.DataFrame()  # Não há colunas categóricas
+        X_cat_encoded = pd.DataFrame()
 
-    # Combinar colunas numéricas e categóricas
     if not X_num.empty and not X_cat_encoded.empty:
         X_processed = pd.concat([X_num, X_cat_encoded], axis=1)
     elif not X_num.empty:
@@ -88,8 +83,8 @@ def alternative2():
         
         print(f"\nMétricas para o algoritmo {name}:\n{output_metrics}")
 
-    ClusterParser.save_results_csv(dataset_name="bike_sharing", all_metrics=all_metrics, filename="metrics_output_bike_sharing")
-    print("Métricas de todos os algoritmos salvas no CSV com sucesso.")
+    # ClusterParser.save_results_csv(dataset_name="student_performance", all_metrics=all_metrics, filename="metrics_output_student_performance")
+    # print("Métricas de todos os algoritmos salvas no CSV com sucesso.")
 
 
 async def main_workflow():
