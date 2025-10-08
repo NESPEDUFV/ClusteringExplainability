@@ -27,7 +27,6 @@ class ClusterParser:
         self.df = None
         self.predicted = None
         self.cluster_descriptions = None
-        self.formatted_output = None
         self.metrics = None
         
     def menu():
@@ -73,47 +72,7 @@ class ClusterParser:
             descriptionUser, columns_sorted = self.cldes.get_cluster_description(data=self.X, labels=self.predicted, cluster=cluster, output_type="description")
             self.cluster_descriptions.append(descriptionUser)
             
-        print(self.cluster_descriptions)
         return self.cluster_descriptions
-
-    def format_cluster_descriptions(self):
-        self.formatted_output = gemini.format_cluster_descriptions(self.cluster_descriptions)
-        return
-
-    def calculate_metrics_for_all_clusters(self):
-        clusters = self.parse_formatted_output(self.formatted_output)
-        metrics_output = {}
-
-        for cluster, rule_str_list in clusters.items():
-            rules = [self.parse_rule(rule_str) for rule_str in rule_str_list]
-            
-            coverage = self.cldes.calculate_coverage(rules, self.X, self.predicted, cluster)
-            separation_error = self.cldes.calculate_separation_error(rules, self.X, self.predicted, cluster)
-            conciseness = self.cldes.calculate_conciseness(rule_str_list)
-            
-            metrics_output[cluster] = {
-                "coverage": coverage,
-                "separation_error": separation_error,
-                "conciseness": conciseness
-            }
-
-        self.metrics = metrics_output
-        return self.metrics
-
-    
-    def format_clusters_and_metrics(self) -> None:
-        self.formatted_output += "\n\n"
-        
-        for cluster, metrics in self.metrics.items():
-            self.formatted_output += (
-                f"Métricas para o Cluster {cluster}:\n"
-                f"coverage: {metrics['coverage']:.4f}\n"
-                f"separation error: {metrics['separation_error']:.4f}\n"
-                f"conciseness: {metrics['conciseness']:.4f}\n\n"
-            )
-        
-        self.formatted_output = self.formatted_output.strip()
-        return
 
     def parse_rule(self, rule_str):
         """
@@ -134,20 +93,6 @@ class ClusterParser:
                 raise ValueError(f"Tipo de regra não reconhecido: {rule_type}")
         else:
             raise ValueError(f"Formato inesperado na regra: {rule_str}")
-
-    def parse_formatted_output(self, formatted_output):
-        """
-        Parseia a saída formatada, organizando as regras por cluster.
-        """
-        clusters = {}
-        current_cluster = None
-        for line in formatted_output.splitlines():
-            if line.startswith("cluster"):
-                current_cluster = int(line.split()[1][:-1])
-                clusters[current_cluster] = []
-            elif line:
-                clusters[current_cluster].append(line.strip('<>'))
-        return clusters
 
     def save_results(algorithm_name, dataset_name, formatted_metrics, filename="results1.txt"):
         file_exists = os.path.isfile(filename)
@@ -182,11 +127,26 @@ class ClusterParser:
 
         print(f"Arquivo salvo com sucesso em: {filepath}")
 
+    def evaluate_clusters(self, rules, data, labels):
+        metrics = {}
+
+        unique_clusters = sorted(set(labels))
+        for cluster in unique_clusters:
+            coverage = self.cldes.calculate_coverage(rules, data, labels, cluster)
+            separation_error = self.cldes.calculate_separation_error(rules, data, labels, cluster)
+            conciseness = self.cldes.calculate_conciseness(rules, cluster)
+
+            metrics[cluster] = {
+                "coverage": coverage,
+                "separation_error": separation_error,
+                "conciseness": conciseness
+            }
+
+        return metrics
+
+
     def process_dataset(self):
         self.perform_clustering()
         self.describe_clusters()
-        # self.format_cluster_descriptions()
-        # self.calculate_metrics_for_all_clusters()
-        # self.format_clusters_and_metrics()
-        # print(self.formatted_output)
-        return self.formatted_output, self.metrics
+        metricas_cluster = self.evaluate_clusters(self.cluster_descriptions, self.X, self.predicted)
+        return self.cluster_descriptions, metricas_cluster

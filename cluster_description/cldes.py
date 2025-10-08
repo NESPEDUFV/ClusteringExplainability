@@ -316,6 +316,7 @@ class CLDES:
         covered_samples = set()
         for rule in cluster_rules:
             feature, condition, values = self.parse_rule(rule)
+            print(feature, condition, values)
             if condition == "80-between":
                 mask = (cluster_data[feature] >= values[0]) & (cluster_data[feature] <= values[1])
             elif condition == "contains":
@@ -323,7 +324,8 @@ class CLDES:
             covered_samples.update(cluster_data[mask].index)
         
         coverage = len(covered_samples) / len(cluster_data)
-        return coverage
+        coverage = len(covered_samples) / len(cluster_data)
+        return round(coverage, 4)
 
 
     def calculate_separation_error(self, rules, data, labels, cluster):
@@ -368,7 +370,7 @@ class CLDES:
             return 0.0
         
         separation_error = len(non_cluster_covered_samples) / len(total_covered_samples)
-        return separation_error
+        return round(separation_error, 4)
 
 
     def calculate_conciseness(self, rules, cluster):
@@ -390,4 +392,4 @@ class CLDES:
             return 1.0  
 
         conciseness = 1 / num_predicates
-        return conciseness
+        return round(conciseness, 4)
