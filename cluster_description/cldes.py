@@ -5,11 +5,13 @@ from typing import Union
 import numpy as np
 import pandas as pd
 from sklearn import svm
-from sklearn.metrics import accuracy_score, recall_score
+from sklearn.metrics import accuracy_score, recall_score, classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVC 
+import shap
 
 import os
 import sys
@@ -28,12 +30,14 @@ class OutputType(enum.Enum):
 
 class CLDES:
 
-    def __init__(self, min_per = 0, min_importance = 0.01, model  = RandomForestClassifier(random_state=42)) -> None:
+    def __init__(self, min_per = 0, min_importance = 0.01, model = SVC(kernel='rbf', random_state=42)) -> None:
         self.min_importance = min_importance
         self._min_per = min_per
         self.model = model
         self.pct_chg_recall = None
         self.pct_chg_acc = None
+        self.shap_importance_per_cluster = None
+        self.global_shap_importance = None
         self.logger = logging.getLogger(__name__)
         logging.basicConfig(level=logging.INFO)    
 
@@ -82,6 +86,101 @@ class CLDES:
         descriptionUser, columns_sorted = self._generate_cluster_description(data, labels, cluster, importance_metric, output_type)
         return descriptionUser, columns_sorted
 
+    def shap_feature_importance(self, X, Y):
+        """
+        Calcula a importância das features usando SHAP.
+
+        Este método substitui a permutação pela atribuição de features do SHAP,
+        que é mais robusto, especialmente para modelos de alta performance.
+
+        Parâmetros:
+        - X: Matriz de features.
+        - Y: Vetor alvo.
+
+        Retorna:
+        - shap_importance_per_cluster: Matriz (feature x cluster) com a importância média SHAP.
+        - global_shap_importance: Array (feature) com a importância média SHAP global.
+        - classification_report: Relatório de classificação do modelo.
+        """
+        x_train, x_test, y_train, y_test = train_test_split(X, Y, test_size=0.33, random_state=42)
+        y_test = np.array(y_test)
+        clusters = np.unique(y_train)
+        
+        # Garante que os dados sejam arrays NumPy para o SHAP
+        x_train_np = np.array(x_train)
+        x_test_np = np.array(x_test)
+
+        # 1. Treinar o modelo (como antes)
+        self.model.fit(x_train_np, y_train)
+
+        # 2. Escolher o explainer SHAP mais adequado
+        print("Criando o explainer SHAP...")
+        # Se o modelo for baseado em árvore (ex: RandomForest, DecisionTree), use o TreeExplainer (muito rápido)
+        if isinstance(self.model, (DecisionTreeClassifier, RandomForestClassifier)):
+            explainer = shap.TreeExplainer(self.model)
+            print("Usando TreeExplainer (rápido).")
+        # Para outros modelos (SVM, LogisticRegression), use o KernelExplainer (mais lento)
+        else:
+            # O KernelExplainer precisa de uma função de predição e um "background" de dados.
+            # Usar um resumo dos dados de treino é uma prática comum.
+            background_data = shap.kmeans(x_train_np, 10) # Sumariza os dados de treino em 10 centróides
+            explainer = shap.KernelExplainer(self.model.predict, background_data)
+            print("Usando KernelExplainer (pode ser lento para datasets grandes).")
+
+        # 3. Calcular os valores SHAP para os dados de teste
+        print("Calculando os valores SHAP...")
+        shap_values = explainer.shap_values(x_test_np)
+        
+        # Para problemas binários, shap_values pode não ser uma lista. Padronizamos para lista.
+        if not isinstance(shap_values, list):
+            # Para o caso binário, explainer.shap_values(X) retorna um único array. 
+            # A convenção é que os valores se referem à classe positiva (classe 1).
+            # Criamos uma lista com os valores para a classe 0 (negativos) e classe 1 (positivos).
+            shap_values = [-shap_values, shap_values]
+
+
+        # 4. Processar os valores SHAP para preencher as matrizes de saída
+        num_features = x_train.shape[1]
+        num_clusters = len(clusters)
+
+        shap_importance_per_cluster = np.zeros((num_features, num_clusters))
+        global_shap_importance = np.zeros(num_features)
+
+        # for cluster_idx, cluster_label in enumerate(clusters):
+        #     # shap_values é uma lista onde o índice corresponde ao rótulo da classe
+        #     # Pegamos o valor absoluto, pois queremos a magnitude do impacto
+        #     mean_abs_shap_for_cluster = np.abs(shap_values[cluster_label]).mean(axis=0)
+        #     shap_importance_per_cluster[:, cluster_idx] = mean_abs_shap_for_cluster
+
+        for cluster_idx, cluster_label in enumerate(clusters):
+            shap_vals = shap_values[cluster_label]
+
+            # Caso o SHAP retorne 3D (ex: (n_samples, n_features, n_classes))
+            if shap_vals.ndim == 3:
+                shap_vals = shap_vals[..., cluster_idx]  # seleciona a classe correta
+
+            # Calcula a importância média absoluta por feature
+            mean_abs_shap_for_cluster = np.abs(shap_vals).mean(axis=0)
+
+            # Se ainda houver mais de uma dimensão (ex: (n_features, 2)), faz a média sobre as classes
+            if mean_abs_shap_for_cluster.ndim > 1:
+                mean_abs_shap_for_cluster = mean_abs_shap_for_cluster.mean(axis=-1)
+
+            shap_importance_per_cluster[:, cluster_idx] = mean_abs_shap_for_cluster
+
+        # A "importância global" (equivalente ao seu pct_chg_acc) pode ser a média da importância entre todos os clusters
+        global_shap_importance = np.mean(shap_importance_per_cluster, axis=1)
+
+        # Manter a compatibilidade da saída
+        y_predicted = self.model.predict(x_test_np)
+        report = classification_report(y_test, y_predicted)
+        
+        # As saídas agora são as matrizes de importância SHAP
+        self.shap_importance_per_cluster = shap_importance_per_cluster
+        self.global_shap_importance = global_shap_importance
+
+        return shap_importance_per_cluster, global_shap_importance, report
+
     def permutation_feature_importance(self, X, Y, groups, n_repeats=5):
         """
         Calculate permutation feature importance for the given data.
@@ -100,6 +199,10 @@ class CLDES:
         y_test = np.array(y_test)
         clusters = np.unique(y_train)
         self.model.fit(np.array(x_train), y_train)
+
+        # print("Dados do model -- acurácia, recall, precisão, f1-score")
+        # print(self.model.score(np.array(x_test), y_test))
+
 
         # preallocate output matrix number of repeats x number of features
         pct_chg = np.zeros((n_repeats, len(np.unique(groups)), len(clusters)))
@@ -138,7 +241,7 @@ class CLDES:
         pct_chg_recall = r_original - pct_chg_recall
         self.pct_chg_recall = pct_chg_recall
         self.pct_chg_acc = pct_chg_acc
-        return pct_chg_recall, pct_chg_acc
+        return pct_chg_recall, pct_chg_acc, classification_report(y_test, y_predicted)
 
     def group_permutation_change(self, X, Y, n_repeats, groups, cluster, check_var):
         """
@@ -292,6 +395,98 @@ class CLDES:
 
         else:
             raise ValueError(f"Invalid rule format: {rule}")
+        
+    def get_cluster_description_shap(self,
+                                    data,
+                                    labels,
+                                    cluster,
+                                    output_type: OutputType = OutputType.DESCRIPTION):
+        """
+        Gera uma descrição para um cluster específico usando a importância de features
+        calculada pelo SHAP.
+
+        Parâmetros:
+        - data: O dataset contendo as features.
+        - labels: Os rótulos dos clusters para os pontos de dados.
+        - cluster: O cluster específico para o qual gerar a descrição.
+        - output_type: O tipo de saída a ser gerado. Padrão é OutputType.DESCRIPTION.
+
+        Retorna:
+        - Uma tupla contendo a descrição do cluster e as colunas ordenadas por importância.
+        """
+        self.logger.info("Gerando %s com importância SHAP", output_type)
+        descriptionUser, columns_sorted = self._generate_cluster_description_shap(data, labels, cluster, output_type)
+        return descriptionUser, columns_sorted
+    
+    def _generate_cluster_description_shap(self,
+                                        data: pd.DataFrame,
+                                        labels: Union[np.array, pd.Series, list],
+                                        cluster: int,
+                                        output_type: str = OutputType.DESCRIPTION):
+        """
+        Lógica interna para gerar a descrição do cluster com base nos valores de SHAP.
+        """
+        data = data.dropna(axis=1)
+
+        # --- PRINCIPAL MUDANÇA AQUI ---
+        # Em vez de escolher entre 'recall' e 'acc', usamos diretamente a matriz de importância do SHAP.
+        # A matriz do SHAP tem a forma (n_features, n_clusters), então a lógica de indexação é a mesma.
+        importances = self.shap_importance_per_cluster
+        
+        # O restante da função é praticamente idêntico
+        numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
+        cols = data.select_dtypes(numerics).columns
+        continuos_vars = [x for x in cols if len(data[x].unique()) > 15]
+
+        # Seleciona a coluna de importâncias para o cluster específico
+        feature_importances = list(importances[:, cluster])
+        self.logger.info("Importância das features (SHAP) para o cluster %s: %s", cluster, feature_importances)
+        
+        index_sort = np.argsort(feature_importances)[::-1]
+        sorted_feat_im = sorted(feature_importances, reverse=True)
+
+        cluster_rows = np.array(labels) == cluster
+        data = data[cluster_rows]
+
+        columns_sorted = data.columns[index_sort]
+        self.logger.info("Features ordenadas por importância (SHAP): %s", columns_sorted)
+
+        data_to_df = {}
+        generalDescription = []
+        
+        for i, col in enumerate(columns_sorted):
+            # A lógica de filtragem e descrição permanece a mesma
+            if sorted_feat_im[i] <= 0 or sorted_feat_im[i] < self.min_importance:
+                continue
+
+            if col not in continuos_vars:
+                value_counts = data[col].value_counts()
+                percs = value_counts / data.shape[0]
+                percs_idx = percs[percs >= self._min_per].index
+                
+                # Correção: percs.index deve ser usado para filtrar os valores
+                values_filtered = value_counts.loc[percs_idx].values
+                percs_filtered = percs.loc[percs_idx].values
+                
+                for value_name, percentage in zip(percs_idx, percs_filtered):
+                    description = Description.discrete_vars(col, percentage, value_name) \
+                        if output_type == OutputType.DESCRIPTION else Predicates.contains(col, value_name)
+                    generalDescription.append(description)
+                
+                if not percs_idx.empty:
+                    data_to_df[col] = percs_idx[0]
+            else:
+                lower = float(round(np.percentile(data[col], 1), 3))
+                upper = float(round(np.percentile(data[col], 99), 3))
+                
+                values = f"[{lower}, {upper}]"
+                data_to_df[col] = values
+                description = Description.continuos_vars(col, lower, upper) \
+                    if output_type == OutputType.DESCRIPTION else Predicates.percentile(col, 80, lower, upper)
+
+                generalDescription.append(description)
+                
+        return generalDescription, columns_sorted
     
     def calculate_coverage(self, rules, data, labels, cluster):
         """

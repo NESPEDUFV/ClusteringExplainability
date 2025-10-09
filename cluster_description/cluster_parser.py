@@ -14,20 +14,26 @@ from sklearn.tree import DecisionTreeClassifier
 import csv
 
 from cluster_description.cldes import CLDES
+from cluster_description.cldes import OutputType
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from api.promptGemini import PromptGemini as gemini
 
 class ClusterParser:
-    def __init__(self, df, model, n_clusters=3):
+    def __init__(self, df, model, y, n_clusters=3):
         self.n_clusters = n_clusters
-        self.cldes = CLDES(0, 0.1, model)
+        self.cldes = CLDES(0, 0.05, model)
         self.X = df
         self.df = None
-        self.predicted = None
+        self.predicted = y
         self.cluster_descriptions = None
         self.metrics = None
+        self.score = None
+        self.pct_chg_recall = None
+        self.shap_importance_per_cluster = None
+        self.global_shap_importance = None
+
         
     def menu():
         while True:
@@ -65,11 +71,21 @@ class ClusterParser:
     def describe_clusters(self):
         groups = [i for i in range(len(self.X.columns))]
 
-        self.cldes.permutation_feature_importance(self.X, self.predicted, groups=groups)
+        self.pct_chg_recall, self.pct_chg_acc, self.score = self.cldes.permutation_feature_importance(self.X, self.predicted, groups=groups)
         
         self.cluster_descriptions = []
         for cluster in np.unique(self.predicted):
-            descriptionUser, columns_sorted = self.cldes.get_cluster_description(data=self.X, labels=self.predicted, cluster=cluster, output_type="description")
+            descriptionUser, columns_sorted = self.cldes.get_cluster_description(data=self.X, labels=self.predicted, cluster=cluster, output_type=OutputType.PREDICATES)
+            self.cluster_descriptions.append(descriptionUser)
+            
+        return self.cluster_descriptions
+    
+    def describe_clusters_with_SHAP(self):
+        self.shap_importance_per_cluster, self.global_shap_importance, self.score = self.cldes.shap_feature_importance(self.X, self.predicted)
+
+        self.cluster_descriptions = []
+        for cluster in np.unique(self.predicted):
+            descriptionUser, columns_sorted = self.cldes.get_cluster_description_shap(data=self.X, labels=self.predicted, cluster=cluster, output_type=OutputType.PREDICATES)
             self.cluster_descriptions.append(descriptionUser)
             
         return self.cluster_descriptions
@@ -146,7 +162,12 @@ class ClusterParser:
 
 
     def process_dataset(self):
-        self.perform_clustering()
+        # self.perform_clustering()
         self.describe_clusters()
         metricas_cluster = self.evaluate_clusters(self.cluster_descriptions, self.X, self.predicted)
-        return self.cluster_descriptions, metricas_cluster
+        return self.cluster_descriptions, metricas_cluster, self.score, self.pct_chg_recall, self.pct_chg_acc
+
+    def process_dataset_sharp(self):
+        self.describe_clusters_with_SHAP()
+        metricas_cluster = self.evaluate_clusters(self.cluster_descriptions, self.X, self.predicted)
+        return self.cluster_descriptions, metricas_cluster, self.score, self.shap_importance_per_cluster, self.global_shap_importance
