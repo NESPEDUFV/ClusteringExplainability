@@ -1,0 +1,13 @@
+# Dependências do pacote clint
+numpy==1.26.4
+pandas==2.2.3
+scikit-learn==1.4.0
+scipy==1.14.1
+
+# Exemplos e notebooks
+matplotlib==3.9.2
+seaborn==0.13.2
+
+# Opcional: integração com a API do Gemini (api/promptGemini.py)
+# google-generativeai
+# python-dotenv

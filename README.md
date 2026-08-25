@@ -1,134 +1,161 @@
-# Cluster Explainability
+# Clustering Explainability
 
-Implementação de uma forma de obter explicações automáticas de clusters gerados por algoritmos não-supervisionados. 
-Utiliza CART - Classification and regression trees - e tenta gerar regras amigáveis. 
+Código de pesquisa para geração automática de explicações de clusters produzidos por
+algoritmos não supervisionados. O repositório reúne duas abordagens complementares:
 
-## Exemplo de utilização básico 
+- **CLEX** — extrai regras legíveis de cada cluster a partir de uma árvore de decisão
+  (CART) treinada para separar os grupos.
+- **CLDES** — descreve cada cluster por um conjunto mínimo de predicados sobre os
+  atributos mais importantes, otimizando *coverage* e *separation error*.
 
-Para utilizar a geração de regras, inicialmente é necessário criar a árvore de decisão para os dados.  
+As descrições podem ainda ser traduzidas para linguagem natural por um LLM
+(`api/promptGemini.py`), e avaliadas pelas métricas de *coverage*, *separation error*
+e *conciseness*.
 
-O método `fit` realiza a criação da árvore, recebendo como parâmetros um `dataframe` com os dados utilizados para o agrupamento e uma série com o cluster de cada instância/linha, ou seja, o número indicando a qual grupo cada instância/linha pertence. É possível também passar parâmetros adicionais para criar árvores com diferentes características.
+## Instalação
+
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+source setup.sh   # adiciona a raiz do projeto ao PYTHONPATH
+```
+
+## Estrutura
+
+| Caminho | Conteúdo |
+| --- | --- |
+| `clint/clint.py` | `CLDES`: importância de atributos, busca de intervalos e métricas |
+| `clint/clex.py` | `CLEX`: árvore de decisão e extração de regras |
+| `clint/cluster_parser.py` | `ClusterParser`: pipeline clustering → descrição → métricas |
+| `clint/predicates.py`, `clint/description.py` | Formatos de saída (predicados formais e texto) |
+| `clusterExplainR/` | Cálculo de importância baseado em entropia usado pelo CLDES |
+| `api/promptGemini.py` | Prompt e integração com o Gemini |
+| `examples/` | Exemplos de uso ponta a ponta |
+
+## CLEX — regras por árvore de decisão
+
+O método `fit` cria a árvore, recebendo um `DataFrame` com os dados usados no
+agrupamento e uma série com o cluster de cada instância. Colunas categóricas são
+convertidas em dummies automaticamente.
 
 ```python
-
-import matplotlib.pyplot as plt
 import numpy as np
-import sklearn
-from clex import CLEX
-from sklearn.datasets import load_iris
 import pandas as pd
-from sklearn.tree import plot_tree
+from sklearn.datasets import load_iris
 
-# dataset de exemplo
+from clint import CLEX
+
 iris = load_iris()
-iris_df = pd.DataFrame(data= np.c_[iris['data'], iris['target']],
-                     columns= iris['feature_names'] + ['cluster'])
-
+iris_df = pd.DataFrame(data=np.c_[iris['data'], iris['target']],
+                       columns=iris['feature_names'] + ['cluster'])
 
 clex = CLEX()
-
-# criação da árvore para geração de regras
-clex.fit(iris_df.drop("target", axis=1), iris["cluster"])
+clex.fit(iris_df.drop("cluster", axis=1), iris_df["cluster"])
 ```
 
-Após criar a árvore, é possível gerar as regras. O método `get_rules` é o responsável pela geração. Ele tem diversos parâmetros para geração das regras e retorna uma lista com as regras para cada grupo desejado. O parâmetro `bin_columns` é utilizado para verificação de colunas binárias ou dummy, fazendo com que regras mais legíveis sejam criadas. O parâmetro `label` é uma lista com os rótulos de quais grupos se deseja gerar as regras. Com o objetivo de filtrar regras desnecessárias, com poucas amostras, o parâmetro `min_samples`pode ser utilizado. Ele recebe uma porcentagem mínima de amostras da classe para uma regra ser considerada. Por fim, existe o parâmetro `mutually_exclusives`. Ele recebe uma lista de atributos mutuamente exclusivos e é utilizado para gerar regras mais legíveis. Pode ser inserido também um conjunto de atributos mutuamente exclusivos, com uma "lista de listas" de atributos desse tipo. Ainda é possível passar as listas de atributos mutuamente exclusivos como parâmetros personalizados separados, caso eles fiquem ao final da chamada do método. Para isso, basta adicionar parâmetros com um nome e a lista de atributos que sejam mutuamente exclusivos.    
+Depois de criada a árvore, `get_rules` gera as regras:
+
+- `bin_columns`: colunas binárias/dummy, tratadas como "É X" / "Não é X";
+- `label`: lista com os rótulos dos grupos desejados;
+- `min_samples`: porcentagem mínima de amostras para uma regra ser considerada;
+- `mutually_exclusives`: lista (ou lista de listas) de atributos mutuamente
+  exclusivos, usada para remover condições redundantes das regras.
 
 ```python
-
-# geração das regras
-labels = [1, 2] # grupos para os quais se deseja gerar regras
+labels = [1, 2]
 rules_all_groups = clex.get_rules(bin_columns=None,
-                        label=labels,
-                        min_samples=0.1,
-                        mutually_exclusives=None 
-                        )
+                                  label=labels,
+                                  min_samples=0.1,
+                                  mutually_exclusives=None)
 
-```
-O formato de retorno das regras é o seguinte: 
-
-```python
->>> print(rules_all_groups)
-```
-
-    [
-        array(['petal length (cm) maior que 2.45 &&\npetal width (cm) menor ou igual a 1.75 &&\npetal length (cm) menor ou igual a 4.95 &&\npetal width (cm) menor ou igual a 1.65 \nQuantidade: 47 - 94.0%'], dtype='<U192'),
-        array(['petal length (cm) maior que 2.45 &&\npetal width (cm) maior que 1.75 &&\npetal length (cm) maior que 4.85 \nQuantidade: 43 - 86.0%'], dtype='<U185')
-    ]
-
-
-Finalizando, é possível imprimir as regras:
-
-```python
-
-# retorna uma lista de regras para cada grupo, é possível iterar sobre elas, como abaixo
-for idx, rules in enumerate(rules_all_groups): 
-    
+for idx, rules in enumerate(rules_all_groups):
     print(f"Regras do Grupo {labels[idx]}")
     for rule in rules:
-        print(rule)
-        print("")
-
+        print(rule, end="\n\n")
 ```
 
-    Regras do Grupo 1
-    petal length (cm) maior que 2.45 &&
-    petal width (cm) menor ou igual a 1.75 &&
-    petal length (cm) menor ou igual a 4.95 &&
-    petal width (cm) menor ou igual a 1.65 
-    Quantidade: 47 - 94.0%
+```
+Regras do Grupo 1
+petal length (cm) maior que 2.45 &&
+petal width (cm) menor ou igual a 1.75 &&
+petal length (cm) menor ou igual a 4.95 &&
+petal width (cm) menor ou igual a 1.65
+Quantidade: 47 - 94.0%
 
-    Regras do Grupo 2
-    petal length (cm) maior que 2.45 &&
-    petal width (cm) maior que 1.75 &&
-    petal length (cm) maior que 4.85 
-    Quantidade: 43 - 86.0%
-
-
-E também é possível visualizar a árvore criada para a geração das regras de maneira completa:
-
-```python
-# visualizar a árvore criada com as regras completas
-fig = plt.figure(figsize=(40,40))
-ax = plot_tree(clex, 
-                filled=True, 
-                feature_names=iris["feature_names"],
-                fontsize=8)
-
-plt.show()
+Regras do Grupo 2
+petal length (cm) maior que 2.45 &&
+petal width (cm) maior que 1.75 &&
+petal length (cm) maior que 4.85
+Quantidade: 43 - 86.0%
 ```
 
---------------------------
-## Cluster Description
+A árvore completa pode ser visualizada com `sklearn.tree.plot_tree(clex, ...)`.
 
-Para utilizar a descrição dos clusters, são necessárias duas etapas: 
+## CLDES — descrição por predicados
 
-- Gerar a importância dos atributos
-- Utilizar as importâncias dos atributos para gerar a descrição dos clusters
-
-As duas etapas podem ser feitas da seguinte maneira: 
-
-Inicialmente é instanciado um objeto CDES, responsável por toda a descrição. 
+A descrição acontece em duas etapas: calcular a importância dos atributos e, a partir
+dela, montar a descrição de cada cluster.
 
 ```python
-# parametros: minimo de importancia, numero de bins (inutil) e modelo para o G2PC
-cdes = CDES(0, 10, model)
+from clint import CLDES, OutputType
+
+# min_per: porcentagem mínima de um valor discreto
+# min_importance: importância mínima de um atributo
+# model: classificador usado na permutation feature importance
+cldes = CLDES(min_per=0, min_importance=0)
+
+groups = list(range(len(X.columns)))
+cldes.permutation_feature_importance(X, predicted, groups=groups)
+
+description, columns_sorted = cldes.get_cluster_description(
+    X, predicted, cluster=0, output_type=OutputType.PREDICATES
+)
 ```
 
-O modelo contém alguns parâmetros, sendo o mais importante o min_per, referente a porcentagem mínima para um atributo ser considerado importante. Os outros atributos são para encontrar a importância dos atributos com as baselines.
+`permutation_feature_importance` usa o rótulo do cluster como variável alvo de um
+modelo supervisionado e mede a queda de *recall* ao permutar cada grupo de atributos.
+`permutation_feature_importance_entropy` é a alternativa baseada em entropia
+(`clusterExplainR`), usada por padrão no `ClusterParser`.
 
-Após isso, é preciso encontrar as importâncias dos atributos:
+`get_cluster_description` percorre os atributos do mais para o menos importante e
+adiciona um predicado por vez enquanto a função objetivo
+`0.2 * coverage + 0.8 * (1 - separation_error)` melhorar. A saída pode ser
+`OutputType.PREDICATES` (formato formal, ex.: `<petal width (cm), 80-between, [0.1, 0.6]>`)
+ou `OutputType.DESCRIPTION` (texto).
+
+### Métricas
+
+| Métrica | Significado |
+| --- | --- |
+| `calculate_coverage` | Proporção dos pontos do cluster descritos pelas regras (e a pureza dos pontos cobertos) |
+| `calculate_separation_error` | Proporção dos pontos cobertos que pertencem a outros clusters |
+| `calculate_conciseness` | Inverso do número de predicados da explicação |
+
+## Pipeline completo
+
+`ClusterParser` encadeia clustering, descrição, formatação em linguagem natural e
+cálculo das métricas:
 
 ```python
-# parametros: minimo de importancia, numero de bins (inutil) e modelo para o G2PC
-pct_chg, pct_chg_acc = cldes.explain_it(X_train, y_train, X_test, y_test, 1, groups)
+from clint.cluster_parser import ClusterParser
+
+cluster_parser = ClusterParser(X, model=RandomForestClassifier(random_state=42), n_clusters=3)
+output, metrics = cluster_parser.process_dataset()
 ```
 
-Para isso, é preciso separar os dados em treino e teste, onde o label do cluster será a variável independente para o modelos supervisionado utilizado na *permutation feature importance.* Além disso, é preciso passar um parâmetro com o número de repetiçõies das permutações e uma lista com o label dos grupos.
+A geração de texto pelo Gemini está desativada por padrão (as chamadas de rede em
+`api/promptGemini.py` estão comentadas). Para usá-la, instale `google-generativeai` e
+`python-dotenv` e defina a chave em `API_KEY` — nunca no código.
 
-Após isso, basta gerar a descrição dos clusters: 
+## Exemplos
 
-```python
-# parametros: dados com uma coluna "cluster" referente aos grupos, o grupo que se deseja gerar a descrição e a importância dos atributos
-cldes.generate_cluster_description(data, i, pct_chg)
-``
+```bash
+python examples/example_clex.py
+python examples/example_cldes.py
+python examples/generateDescriptionUser.py
+```
 
+## Licença
+
+MIT — veja [LICENSE](LICENSE).
