@@ -1,7 +1,8 @@
 # Clustering Explainability
 
-Código de pesquisa para geração automática de explicações de clusters produzidos por
-algoritmos não supervisionados. O repositório reúne duas abordagens complementares:
+Este trabalho propõe o CLINT (Cluster INTerpretability), uma abordagem para interpretar resultados de agrupamento com base na geração automática de descrições legíveis por humanos na forma de regras. A metodologia emprega uma estratégia gulosa orientada por uma função objetivo que equilibra cobertura, erro de separação e concisão, permitindo a construção de descrições que sejam simultaneamente representativas, discriminativas e interpretáveis. Como etapa fundamental do processo, introduzimos um método de seleção de atributos baseado na divergência de Jensen–Shannon, capaz de identificar atributos com alto poder discriminativo por meio da comparação de suas distribuições dentro do cluster com a distribuição global do conjunto de dados.
+
+This work proposes CLINT (Cluster INTerpretability), an approach for interpreting clustering results based on the automatic generation of human-readable descriptions in the form of rules. The methodology employs a greedy strategy driven by an objective function that balances coverage, separation error and conciseness, enabling the construction of descriptions that are simultaneously representative, discriminative, and interpretable. As a fundamental step in the process, we introduce a feature selection method based on Jensen–Shannon divergence, capable of identifying attributes with high discriminative power by comparing their distributions within the cluster against the global dataset.
 
 - **CLEX** — extrai regras legíveis de cada cluster a partir de uma árvore de decisão
   (CART) treinada para separar os grupos.
