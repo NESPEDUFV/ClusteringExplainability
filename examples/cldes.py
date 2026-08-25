@@ -2,13 +2,6 @@
 Gera a descrição de um cluster do dataset Iris usando o CLDES.
 """
 
-<<<<<<< Updated upstream:examples/cldes.py
-from cluster_description.cldes import CLDES
-from cluster_description.clex import CLEX
-from sklearn.datasets import load_iris, load_wine
-import pandas as pd
-=======
->>>>>>> Stashed changes:examples/example_cldes.py
 import numpy as np
 import pandas as pd
 from sklearn.cluster import KMeans
