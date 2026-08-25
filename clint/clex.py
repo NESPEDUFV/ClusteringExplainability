@@ -35,27 +35,20 @@ class CLEX(DecisionTreeClassifier):
         self.data = None
         self.bin_columns = []
 
-
-            
     def fit(self, x, y):
-
         self.data = x.copy()
-            
+
         # realiza o onehot
         for i in self.data.columns:
-
             if(is_object_dtype(self.data[i])):
                 self.bin_columns.extend(x[i].unique())
                 dummies = pd.get_dummies(self.data[i])
                 self.data = self.data.drop(i, axis=1).join(dummies)
 
         super().fit(self.data, y)
-            
+
         self.model_score = self.score(self.data, y)
         self.data["cluster"] = y
-
-
-
 
     def get_rules(self, bin_columns=None, label=None, min_samples=0, mutually_exclusives=None, **kwargs):
         """ 
@@ -93,8 +86,6 @@ class CLEX(DecisionTreeClassifier):
         numpy.ndarray
             Um conjunto de regras para um ou mais clusters.
         """
-
-
 
         # pegar regras para uma unica label ou para todas
         if(label is not None and len(label) == 1):
@@ -165,16 +156,12 @@ class CLEX(DecisionTreeClassifier):
             else: 
                 mutually_exclusives_keys.update(dict.fromkeys(mutually_exclusives, 0))
 
-        #print(f"Amostras da classe {label}: ", x_test.shape[0])
-        #print("")
-
         for i in range(x_test.shape[0]): 
             node_index = node_indicator.indices[
                 node_indicator.indptr[i] : node_indicator.indptr[i + 1]
             ]
 
             positives = []
-            #conditions = f"Regra cluster {label}\n\n"
             conditions = ""
             for node_id in node_index:
                 
@@ -249,8 +236,7 @@ class CLEX(DecisionTreeClassifier):
                 feature_name = i[6:-3]
                 if(feature_name in to_remove):
                     continue
-            
-            
+
             if(idx == len(rules) - 1):
                 new_rules += i.replace("&&", "") + "\n"
             else: 
